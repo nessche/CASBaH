@@ -45,7 +45,7 @@ public class MyVaadinApplication extends Application
     {
     	try {
 	        window = new Window("CASBaH Application");
-	        provider = new OpenSslCAProvider(System.getenv(CASBAH_CAROOT), "casbah");
+	        provider = new OpenSslCAProvider("openssl",System.getenv(CASBAH_CAROOT), "casbah");
 	        setMainWindow(window);
 	        buildMainLayout();
     	} catch (CAProviderException cpe) {
@@ -61,7 +61,7 @@ public class MyVaadinApplication extends Application
     	SplitPanel splitPanel = new SplitPanel(SplitPanel.ORIENTATION_HORIZONTAL);
     
     	X509Certificate cert = provider.getCACertificate();
-    	MainCAView view = new MainCAView(cert);
+    	MainCAView view = new MainCAView(cert, this);
     	IssuedCertificateList icl = new IssuedCertificateList(provider.getIssuedCertificates());
     	splitPanel.addComponent(view);
     	splitPanel.addComponent(icl);

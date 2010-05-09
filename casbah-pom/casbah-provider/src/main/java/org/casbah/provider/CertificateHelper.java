@@ -7,8 +7,8 @@ import org.apache.commons.codec.binary.Base64;
 
 public class CertificateHelper {
 
-	private static final String CERTIFICATE_ARMOR_BEGIN = "-----BEGIN CERTIFICATE-----";
-	private static final String CERTIFICATE_ARMOR_END = "-----END CERTIFICATE-----";
+	private static final String CERTIFICATE_ARMOR_BEGIN = "-----BEGIN CERTIFICATE-----\n";
+	private static final String CERTIFICATE_ARMOR_END = "-----END CERTIFICATE-----\n";
 	
 	public static String encodeCertificate(X509Certificate certificate, boolean addArmor) throws CAProviderException {
 		try { 

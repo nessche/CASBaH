@@ -20,6 +20,9 @@ import org.junit.Test;
 
 public class OpenSslCAProviderTest {
 
+	private static final String PASSWORD = "casbah";
+	private static final String CAROOT = "/caroot";
+	private static final String OPENSSL = "openssl";
 	private String targetDir;
 
 	@Before
@@ -46,13 +49,13 @@ public class OpenSslCAProviderTest {
 	@Test
 	public void testIsCASetup() {
 		System.out.println("Target dir is set to: " + targetDir);
-		OpenSslCAProvider provider = new OpenSslCAProvider(targetDir + "/caroot", "casbah");
+		OpenSslCAProvider provider = new OpenSslCAProvider(OPENSSL, targetDir + CAROOT, PASSWORD);
 		assertTrue("Checking with correct directory", provider.isCASetup());
 	}
 	
 	@Test
 	public void testGetCACertificate() throws CAProviderException {
-		OpenSslCAProvider provider = new OpenSslCAProvider(targetDir + "/caroot", "casbah");
+		OpenSslCAProvider provider = new OpenSslCAProvider(OPENSSL, targetDir + CAROOT, PASSWORD);
 		Certificate caCert = provider.getCACertificate();
 		assertNotNull("Checking ca cert is not null", caCert);
 		assertTrue("Checking certificate is an X.509 one", caCert instanceof X509Certificate);
@@ -68,11 +71,24 @@ public class OpenSslCAProviderTest {
 		
 		String csr = fileIntoString(new File(targetDir,"/client/requests/03.csr"));
 		
-		OpenSslCAProvider provider = new OpenSslCAProvider(targetDir + "/caroot", "casbah");
+		OpenSslCAProvider provider = new OpenSslCAProvider(OPENSSL, targetDir + CAROOT, PASSWORD);
 		X509Certificate cert = provider.sign(csr);
 		assertNotNull(cert);
 		assertEquals(new BigInteger("03"), cert.getSerialNumber());
 		System.out.println(cert.getIssuerX500Principal().getName());
+	}
+	
+	@Test
+	public void testGetProviderVersion_correctProvider() throws CAProviderException {
+		OpenSslCAProvider provider = new OpenSslCAProvider(OPENSSL, targetDir + CAROOT, PASSWORD);
+		String providerVersion = provider.getProviderVersion();
+		assertTrue(providerVersion.startsWith("OpenSSL 0.9"));
+	}
+	
+	@Test(expected=CAProviderException.class)
+	public void testGetProviderVersion_nonExistingProvider() throws CAProviderException {
+		OpenSslCAProvider provider = new OpenSslCAProvider("oppenssl", targetDir + CAROOT, PASSWORD);
+		provider.getProviderVersion();
 	}
 	
 	private String fileIntoString(File file) throws IOException {

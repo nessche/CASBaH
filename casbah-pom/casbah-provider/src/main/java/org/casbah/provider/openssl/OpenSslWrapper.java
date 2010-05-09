@@ -1,6 +1,7 @@
 package org.casbah.provider.openssl;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -11,9 +12,9 @@ public class OpenSslWrapper {
 
 	private static final String CASBAH_SSL_CA_ROOT = "CASBAH_SSL_CA_ROOT";
 	private final String opensslExecutable;
-	private final String caRootDir;
+	private final File caRootDir;
 
-	public OpenSslWrapper(String opensslExecutable, String caRootDir) {
+	public OpenSslWrapper(String opensslExecutable, File caRootDir) {
 		this.opensslExecutable = opensslExecutable;
 		this.caRootDir = caRootDir;
 		
@@ -24,7 +25,7 @@ public class OpenSslWrapper {
 		fullParams.add(0, opensslExecutable);
 		ProcessBuilder processBuilder = new ProcessBuilder(fullParams);
 		Map<String, String> env = processBuilder.environment();
-		env.put(CASBAH_SSL_CA_ROOT, caRootDir);
+		env.put(CASBAH_SSL_CA_ROOT, caRootDir.getAbsolutePath());
 		Process proc = processBuilder.start();
 		BufferedReader outputReader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
 		BufferedReader errorReader = new BufferedReader(new InputStreamReader(proc.getErrorStream()));

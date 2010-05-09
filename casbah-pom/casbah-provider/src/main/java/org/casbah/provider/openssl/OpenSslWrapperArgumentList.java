@@ -14,6 +14,7 @@ public class OpenSslWrapperArgumentList {
 	private static final String CONFIG_SWITCH = "-config";
 	private static final String OUTDIR_SWITCH = "-outdir";
 	private static final String BATCH_SWITCH = "-batch";
+	private static final String VERSION_SWITCH = "version";
 	private List<String> args = new ArrayList<String>();
 	
 	public OpenSslWrapperArgumentList setBatch() {
@@ -62,6 +63,11 @@ public class OpenSslWrapperArgumentList {
 	private OpenSslWrapperArgumentList addFileParameter(String paramName, File file) {
 		args.add(paramName);
 		args.add(file.getAbsolutePath());
+		return this;
+	}
+	
+	public OpenSslWrapperArgumentList addVersionSwitch() {
+		args.add(VERSION_SWITCH);
 		return this;
 	}
 	

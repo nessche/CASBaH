@@ -2,6 +2,7 @@ package org.casbah.provider.openssl;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -23,7 +24,7 @@ public class OpenSslWrapperTest {
 	
 	@Test
 	public void testExecute() throws IOException, InterruptedException {
-		OpenSslWrapper wrapper = new OpenSslWrapper("openssl", targetDir + "/caroot" );
+		OpenSslWrapper wrapper = new OpenSslWrapper("openssl", new File(targetDir + "/caroot"));
 
 		int result = wrapper.executeCommand(output, error, Arrays.asList("req", "-noout", "-text", "-in", targetDir + "/client/requests/01.csr"));
 		assertEquals("Checking result value", 0, result);

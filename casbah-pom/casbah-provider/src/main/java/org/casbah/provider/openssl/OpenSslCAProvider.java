@@ -1,18 +1,14 @@
 package org.casbah.provider.openssl;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.StringReader;
-import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.Arrays;
 import java.util.List;
 
 import org.casbah.provider.CAProvider;
@@ -29,8 +25,10 @@ public class OpenSslCAProvider implements CAProvider{
 	private static final String CONFIG_FILE = "openssl.cnf";
 	private final File caRootDir;
 	private final String keypass;
+	private final String openSslExecutable;
 
-	public OpenSslCAProvider(final String caRootDir, String keypass) {
+	public OpenSslCAProvider(final String openSslExecutable, final String caRootDir, String keypass) {
+		this.openSslExecutable = openSslExecutable;
 		this.keypass = keypass;
 		this.caRootDir = new File(caRootDir);
 	}
@@ -80,7 +78,7 @@ public class OpenSslCAProvider implements CAProvider{
 		try {
 			String nextSerial = new OpenSslSerialAdapter(new File(caRootDir, SERIAL_FILE)).getNextSerialNumber();
 			
-			OpenSslWrapper wrapper = new OpenSslWrapper("openssl", caRootDir.getAbsolutePath());
+			OpenSslWrapper wrapper = new OpenSslWrapper(openSslExecutable, caRootDir);
 			StringBuffer output = new StringBuffer();
 			StringBuffer error = new StringBuffer();
 			OpenSslWrapperArgumentList args = new OpenSslWrapperArgumentList();
@@ -152,5 +150,26 @@ public class OpenSslCAProvider implements CAProvider{
 			throw new CAProviderException("Could not parse public certificate", ce);
 		}
 	}
-
+	
+	@Override
+	public String getProviderVersion() throws CAProviderException {
+		try {
+			OpenSslWrapper wrapper = new OpenSslWrapper(openSslExecutable, caRootDir);
+			OpenSslWrapperArgumentList args = new OpenSslWrapperArgumentList().addVersionSwitch();
+			StringBuffer output = new StringBuffer();
+			StringBuffer error = new StringBuffer();
+			int result = wrapper.executeCommand(output, error, args.toList());
+			if (result != 0) {
+				throw new CAProviderException("Could not execute " + openSslExecutable, null);
+			}
+			System.out.println(output.toString());
+			return output.toString();
+		
+		} catch (InterruptedException ie) {
+			throw new CAProviderException("An error occurred while executing openssl", ie);
+		} catch (IOException ioe) {
+			throw new CAProviderException("AN error occurred while executing openssl", ioe);
+		}
+	}
+ 
 }

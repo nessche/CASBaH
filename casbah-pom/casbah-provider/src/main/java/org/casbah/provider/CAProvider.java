@@ -13,6 +13,8 @@ public interface CAProvider {
 	
 	X509Certificate getIssuedCertificateBySerialNumber(String serialNumber) throws CAProviderException;
 	
+	String getProviderVersion() throws CAProviderException;
+	
 	boolean isCASetup();
 	
 	
