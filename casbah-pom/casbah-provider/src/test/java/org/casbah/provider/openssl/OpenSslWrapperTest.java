@@ -27,7 +27,11 @@ public class OpenSslWrapperTest {
 		OpenSslWrapper wrapper = new OpenSslWrapper("openssl", new File(targetDir + "/caroot"));
 
 		int result = wrapper.executeCommand(output, error, Arrays.asList("req", "-noout", "-text", "-in", targetDir + "/client/requests/01.csr"));
+		System.out.println(error.toString());
+		System.out.println(output.toString());
+		
 		assertEquals("Checking result value", 0, result);
+
 		assertTrue("Checking output", output.length() > 0);
 		assertTrue("Checking output2", output.toString().startsWith("Certificate Request"));
 	}

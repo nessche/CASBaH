@@ -18,13 +18,22 @@ public class OpenSslSerialAdapter {
 	}
 	
 	public String getNextSerialNumber() throws CAProviderException {
+		BufferedReader reader = null;
 		try {
-			BufferedReader reader = new BufferedReader(new FileReader(serialNumberFile));
+			reader = new BufferedReader(new FileReader(serialNumberFile));
 			return reader.readLine();
 		} catch (FileNotFoundException fnfe) {
 			throw new CAProviderException("Could not find serial number file", fnfe);
  		} catch (IOException ioe) {
  			throw new CAProviderException("Error while reading the serial number file", ioe);
+ 		} finally {
+ 			try {
+ 				if (reader != null) {
+ 					reader.close();
+ 				}
+ 			} catch (Exception e) {
+ 				e.printStackTrace();
+ 			}
  		}
 	}
 }

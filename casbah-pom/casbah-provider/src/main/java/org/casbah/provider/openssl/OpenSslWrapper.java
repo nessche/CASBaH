@@ -1,18 +1,19 @@
 package org.casbah.provider.openssl;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeUnit;
 
 public class OpenSslWrapper {
 
 	private static final String CASBAH_SSL_CA_ROOT = "CASBAH_SSL_CA_ROOT";
 	private final String opensslExecutable;
 	private final File caRootDir;
+	private static final long TIMEOUT = 60;
 
 	public OpenSslWrapper(String opensslExecutable, File caRootDir) {
 		this.opensslExecutable = opensslExecutable;
@@ -24,27 +25,23 @@ public class OpenSslWrapper {
 		List<String> fullParams = new ArrayList<String>(parameters);
 		fullParams.add(0, opensslExecutable);
 		ProcessBuilder processBuilder = new ProcessBuilder(fullParams);
+		CyclicBarrier barrier = new CyclicBarrier(3);
 		Map<String, String> env = processBuilder.environment();
 		env.put(CASBAH_SSL_CA_ROOT, caRootDir.getAbsolutePath());
 		Process proc = processBuilder.start();
-		BufferedReader outputReader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-		BufferedReader errorReader = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
+		StreamConsumer outputConsumer = new StreamConsumer(output, proc.getInputStream(), barrier, TIMEOUT);
+		StreamConsumer errorConsumer = new StreamConsumer(error, proc.getErrorStream(), barrier, TIMEOUT);
+		outputConsumer.start();
+		errorConsumer.start();
 		int returnValue = proc.waitFor();
-		readerToStringBuffer(output, outputReader);
-		readerToStringBuffer(error, errorReader); 
+		try {
+			barrier.await(TIMEOUT, TimeUnit.SECONDS);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return returnValue;
 	}
 
-	private void readerToStringBuffer(StringBuffer buffer, BufferedReader reader)
-			throws IOException {
-		if (buffer != null) {
-			String line = null;
-			while ((line = reader.readLine()) != null) {
-				buffer.append(line);
-				buffer.append('\n');
-			}
-		}
-	}
 	
 	
 }

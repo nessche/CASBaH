@@ -83,7 +83,7 @@ public class OpenSslCAProvider implements CAProvider{
 			StringBuffer error = new StringBuffer();
 			OpenSslWrapperArgumentList args = new OpenSslWrapperArgumentList();
 			args.setCA().setNoText().setBatch().addConfig(new File(caRootDir, CONFIG_FILE))
-				.addInFile(tempFile).addOutdir(new File(caRootDir, CERT_PATH)).addKey(keypass);
+				.addInFile(tempFile).addOutdir(new File(caRootDir, CERT_PATH)).addKey(keypass).addVerbose();
 			if (wrapper.executeCommand(output, error, args.toList()) == 0) {
 				return getCertificate(new File(new File(caRootDir, CERT_PATH), nextSerial + CERT_SUFFIX));
 			} else {
@@ -111,7 +111,7 @@ public class OpenSslCAProvider implements CAProvider{
 		if (!caRootDir.exists() || !caRootDir.isDirectory() || !caRootDir.canWrite()) {
 			return false;
 		}
-		File caKey = new File(caRootDir, "keys/ca.key");
+		File caKey = new File(caRootDir, "keys" + File.separatorChar + "ca.key");
 		if (!caKey.exists() || !caKey.isFile() || !caKey.canRead()) {
 			System.out.println("private key is not present");
 			return false;

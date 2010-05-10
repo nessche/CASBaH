@@ -12,7 +12,6 @@ import java.math.BigInteger;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.Map;
 
 import org.casbah.provider.CAProviderException;
 import org.junit.Before;
@@ -21,26 +20,27 @@ import org.junit.Test;
 public class OpenSslCAProviderTest {
 
 	private static final String PASSWORD = "casbah";
-	private static final String CAROOT = "/caroot";
+	private static final String CAROOT = File.separatorChar + "caroot";
 	private static final String OPENSSL = "openssl";
 	private String targetDir;
 
 	@Before
 	public void setup() {
-		targetDir = System.getProperty("basedir") + "/target/test-classes";
+		targetDir = System.getProperty("basedir") + File.separatorChar + "target" + File.separatorChar + "test-classes";
 	}
 	
 	private void rollbackPreviousTests() {
-		File oldDb = new File(targetDir, "caroot/database.txt.old");
-		File oldSerial = new File(targetDir, "caroot/serial.txt.old");
+		File oldDb = new File(targetDir, "caroot" + File.separatorChar + "database.txt.old");
+		File oldSerial = new File(targetDir, "caroot" + File.separatorChar + "serial.txt.old");
 		
 		if (oldDb.exists()) {
-			File newDb = new File(targetDir, "caroot/database.txt");
+			File newDb = new File(targetDir, "caroot" +  File.separatorChar + "database.txt");
 			newDb.delete();
 			oldDb.renameTo(newDb);
 		}
 		if (oldSerial.exists()) {
-			File newSerial = new File(targetDir, "caroot/serial.txt");
+			File newSerial = new File(targetDir, "caroot" + File.separatorChar + "serial.txt");
+			System.out.println("newSerial is " + newSerial.getAbsolutePath());
 			newSerial.delete();
 			oldSerial.renameTo(newSerial);
 		}
@@ -70,7 +70,6 @@ public class OpenSslCAProviderTest {
 		rollbackPreviousTests();
 		
 		String csr = fileIntoString(new File(targetDir,"/client/requests/03.csr"));
-		
 		OpenSslCAProvider provider = new OpenSslCAProvider(OPENSSL, targetDir + CAROOT, PASSWORD);
 		X509Certificate cert = provider.sign(csr);
 		assertNotNull(cert);
@@ -82,7 +81,7 @@ public class OpenSslCAProviderTest {
 	public void testGetProviderVersion_correctProvider() throws CAProviderException {
 		OpenSslCAProvider provider = new OpenSslCAProvider(OPENSSL, targetDir + CAROOT, PASSWORD);
 		String providerVersion = provider.getProviderVersion();
-		assertTrue(providerVersion.startsWith("OpenSSL 0.9"));
+		assertTrue(providerVersion.startsWith("OpenSSL"));
 	}
 	
 	@Test(expected=CAProviderException.class)

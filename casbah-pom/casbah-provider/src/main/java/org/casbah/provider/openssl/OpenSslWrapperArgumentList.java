@@ -6,6 +6,7 @@ import java.util.List;
 
 public class OpenSslWrapperArgumentList {
 
+	private static final String VERBOSE_SWITCH = "-verbose";
 	private static final String OUT_SWITCH = "-out";
 	private static final String IN_SWITCH = "-in";
 	private static final String KEY_SWITCH = "-key";
@@ -69,6 +70,12 @@ public class OpenSslWrapperArgumentList {
 	public OpenSslWrapperArgumentList addVersionSwitch() {
 		args.add(VERSION_SWITCH);
 		return this;
+	}
+
+	public OpenSslWrapperArgumentList addVerbose() {
+		args.add(VERBOSE_SWITCH);
+		return this;
+		
 	}
 	
 }
