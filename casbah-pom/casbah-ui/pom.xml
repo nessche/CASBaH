@@ -82,7 +82,7 @@
                         <contextPath>/casbah-ui</contextPath>
                     </webAppConfig>
                 </configuration>
-            </plugin>
+            </plugin>        
         </plugins>
     </build>
 

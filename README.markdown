@@ -10,7 +10,7 @@ To build the CASBaH you'll need the following:
 
 * a copy of the source code, either from a distribution tarball or from the git repository
 * a Java 5 compliant compiler
-* Maven 2.0.10 or above
+* Maven 2.1.0 or above
 
 From the `casbah-pom` directory
 

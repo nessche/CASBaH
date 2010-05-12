@@ -10,6 +10,7 @@
   <modules>
     <module>casbah-provider</module>
     <module>casbah-ui</module>
+    <module>casbah-embedded</module>
   </modules>
 
   <build>
