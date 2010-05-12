@@ -1,9 +1,8 @@
 package org.casbah.ui;
 
-import java.awt.TextArea;
 import java.security.cert.X509Certificate;
 
-import org.apache.commons.codec.binary.Base64;
+import org.casbah.provider.CAProvider;
 import org.casbah.provider.CAProviderException;
 import org.casbah.provider.CertificateHelper;
 
@@ -17,22 +16,21 @@ import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Component.Event;
 import com.vaadin.ui.Window.CloseEvent;
 
 public class MainCAView extends CustomComponent{
 
 	private static final String X509_CERT_MIME_TYPE = "application/x-x509-ca-cert";
 	
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	private final Application application;
 
-	public MainCAView(final X509Certificate cert, Application application) {
+	private final CAProvider provider;
+
+	public MainCAView(final CAProvider provider, final X509Certificate cert, Application application) {
 		
+		this.provider = provider;
 		this.application = application;
 		Panel panel = new Panel("CA Details");
 		panel.setContent(new VerticalLayout());
@@ -92,6 +90,22 @@ public class MainCAView extends CustomComponent{
 					}
 				}));
 		
+		caButtons.addComponent(new Button("Sign a CSR",
+				new Button.ClickListener() {
+					
+					private static final long serialVersionUID = 1L;
+
+					public void buttonClick(ClickEvent event) {
+						try {
+							uploadAndSignCsr();
+						} catch (CAProviderException pe) {
+							pe.printStackTrace();
+						}
+						
+					}
+					
+				}));
+		
 		panel.addComponent(caInfo);
 		panel.addComponent(caButtons);
 
@@ -99,6 +113,56 @@ public class MainCAView extends CustomComponent{
 		setCompositionRoot(panel);
 
 	}
+	
+	private void uploadAndSignCsr() throws CAProviderException {
+		final Window csrWindow = new Window("Upload CSR");
+		csrWindow.setPositionX(200);
+		csrWindow.setPositionY(100);
+		csrWindow.setWidth("800px");
+		csrWindow.setHeight("300px");
+		csrWindow.addListener(new Window.CloseListener() {
+			
+			private static final long serialVersionUID = 1L;
+
+			public void windowClose(CloseEvent e) {
+				application.getMainWindow().removeWindow(csrWindow);
+				
+			}
+		});
+		
+		final TextField csrData = new TextField("DER Encoded CSR");
+		csrData.setColumns(80);
+		csrData.setRows(20);
+		csrData.setWordwrap(false);
+		csrWindow.addComponent(csrData);
+		HorizontalLayout hl = new HorizontalLayout();
+		csrWindow.addComponent(hl);
+		hl.addComponent(new Button("Cancel", new Button.ClickListener() {
+			
+			private static final long serialVersionUID = 1L;
+
+			public void buttonClick(ClickEvent event) {
+				application.getMainWindow().removeWindow(csrWindow);
+				
+			}
+		}));
+		hl.addComponent(new Button("Upload", new Button.ClickListener() {
+			
+			private static final long serialVersionUID = 1L;
+
+			public void buttonClick(ClickEvent event) {
+				String csr = (String) csrData.getValue();
+				try {
+					X509Certificate result = provider.sign(csr);
+					
+				} catch (CAProviderException cpe) {
+					cpe.printStackTrace();
+				}
+			}
+		}));
+		csrWindow.setModal(true);
+		application.getMainWindow().addWindow(csrWindow);
+	}	
 
 	private void showEncodedCertificate(X509Certificate cert, String serialNumber) throws CAProviderException {
 		final Window certWindow = new Window(serialNumber);
@@ -108,9 +172,6 @@ public class MainCAView extends CustomComponent{
 		certWindow.setHeight("300px");
 		certWindow.addListener(new Window.CloseListener() {
 			
-			/**
-			 * 
-			 */
 			private static final long serialVersionUID = 1L;
 
 			public void windowClose(CloseEvent e) {

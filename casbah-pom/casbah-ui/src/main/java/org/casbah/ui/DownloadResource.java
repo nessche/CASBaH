@@ -6,6 +6,7 @@ import com.vaadin.terminal.StreamResource;
 
 public class DownloadResource extends StreamResource {
 
+	private static final long serialVersionUID = 1L;
 
 	public DownloadResource(StreamSource source, String mimeType, String filename, Application application) {
 		super(source, filename, application);

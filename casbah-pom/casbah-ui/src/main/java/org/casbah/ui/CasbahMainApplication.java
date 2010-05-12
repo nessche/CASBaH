@@ -22,19 +22,15 @@ import org.casbah.provider.CAProviderException;
 import org.casbah.provider.openssl.OpenSslCAProvider;
 
 import com.vaadin.Application;
-import com.vaadin.terminal.Sizeable;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.SplitPanel;
-import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
 /**
  * The Application's "main" class
  */
 @SuppressWarnings("serial")
-public class MyVaadinApplication extends Application
+public class CasbahMainApplication extends Application
 {
     private static final String CASBAH_CAROOT = "CASBAH_CAROOT";
 	private Window window;
@@ -61,7 +57,7 @@ public class MyVaadinApplication extends Application
     	SplitPanel splitPanel = new SplitPanel(SplitPanel.ORIENTATION_HORIZONTAL);
     
     	X509Certificate cert = provider.getCACertificate();
-    	MainCAView view = new MainCAView(cert, this);
+    	MainCAView view = new MainCAView(provider, cert, this);
     	IssuedCertificateList icl = new IssuedCertificateList(provider.getIssuedCertificates());
     	splitPanel.addComponent(view);
     	splitPanel.addComponent(icl);
