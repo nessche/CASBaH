@@ -11,6 +11,8 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.List;
 
+import javax.security.auth.x500.X500Principal;
+
 import org.casbah.provider.CAProvider;
 import org.casbah.provider.CAProviderException;
 import org.casbah.provider.CertificateMetainfo;
@@ -170,6 +172,12 @@ public class OpenSslCAProvider implements CAProvider{
 		} catch (IOException ioe) {
 			throw new CAProviderException("AN error occurred while executing openssl", ioe);
 		}
+	}
+
+	@Override
+	public boolean setUpCA(X500Principal principal, String keypass) {
+		// TODO Auto-generated method stub
+		return false;
 	}
  
 }
