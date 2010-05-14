@@ -3,6 +3,8 @@ package org.casbah.ui;
 import java.io.File;
 import java.util.logging.Logger;
 
+import javax.security.auth.x500.X500Principal;
+
 
 public class CasbahConfiguration {
 
@@ -35,6 +37,10 @@ public class CasbahConfiguration {
 			casbahHome.mkdirs();
 		}
 		return casbahHome;
+	}
+	
+	public static X500Principal getDefaultPrincipal() {
+		return new X500Principal("C=FI, ST=Uusimaa, L=Helsinki, O=Harhaanjohtaja.com, CN=Casbah Test CA");
 	}
 	
 }

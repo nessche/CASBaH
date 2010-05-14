@@ -67,6 +67,35 @@
           </archive>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jarsigner-plugin</artifactId>
+        <version>1.2</version>
+        <executions>
+          <execution>
+            <id>sign</id>
+            <goals>
+              <goal>sign</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <keystore>signingKey.jks</keystore>
+          <alias>signingKey</alias>
+          <storepass>casbah</storepass>
+          <keypass>casbah</keypass>
+        </configuration>
+      </plugin>
+      
 	</plugins>
   </build>
+  
+  <dependencies>
+  	<dependency>
+  		<groupId>net.sourceforge.winstone</groupId>
+  		<artifactId>winstone</artifactId>
+  		<version>0.9.10</version>
+  		<scope>provided</scope>
+  	</dependency>
+  </dependencies>
 </project>

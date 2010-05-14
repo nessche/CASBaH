@@ -6,6 +6,15 @@ import java.util.List;
 
 public class OpenSslWrapperArgumentList {
 
+	private static final String SUBJECT_SWITCH = "-subj";
+	private static final String PASSIN_SWITCH = "-passin";
+	private static final String X509_SWITCH = "-x509";
+	private static final String REQ_SWITCH = "req";
+	private static final String NEW_SWITCH = "-new";
+	private static final String STDIN = "stdin";
+	private static final String PASSOUT_SWITCH = "-passout";
+	private static final String DES3_SWITCH = "-des3";
+	private static final String GENRSA_SWITCH = "genrsa";
 	private static final String VERBOSE_SWITCH = "-verbose";
 	private static final String OUT_SWITCH = "-out";
 	private static final String IN_SWITCH = "-in";
@@ -38,10 +47,8 @@ public class OpenSslWrapperArgumentList {
 		return addSwitchParameter(NOTEXT_SWITCH);
 	}
 	
-	public OpenSslWrapperArgumentList addKey(String keypass) {
-		args.add(KEY_SWITCH);
-		args.add(keypass);
-		return this;
+	public OpenSslWrapperArgumentList addKey(File keyFile) {
+		return addFileParameter(KEY_SWITCH, keyFile);
 	}
 	
 	public OpenSslWrapperArgumentList addInFile(File inFile) {
@@ -62,20 +69,70 @@ public class OpenSslWrapperArgumentList {
 	}
 	
 	private OpenSslWrapperArgumentList addFileParameter(String paramName, File file) {
-		args.add(paramName);
-		args.add(file.getAbsolutePath());
-		return this;
+		return addStringParameter(paramName, file.getAbsolutePath());
 	}
 	
-	public OpenSslWrapperArgumentList addVersionSwitch() {
-		args.add(VERSION_SWITCH);
-		return this;
+	private OpenSslWrapperArgumentList addStringParameter(String paramName, String value) {
+		args.add(paramName);
+		args.add(value);
+		return this;			
+	}
+	
+	public OpenSslWrapperArgumentList setVersion() {
+		return addSwitchParameter(VERSION_SWITCH);
 	}
 
-	public OpenSslWrapperArgumentList addVerbose() {
-		args.add(VERBOSE_SWITCH);
-		return this;
+	public OpenSslWrapperArgumentList setVerbose() {
+		return addSwitchParameter(VERBOSE_SWITCH);
 		
+	}
+	
+	public OpenSslWrapperArgumentList addGenrsa() {
+		return addSwitchParameter(GENRSA_SWITCH);
+	}
+	
+	public OpenSslWrapperArgumentList setDes3() {
+		return addSwitchParameter(DES3_SWITCH);
+	}
+	
+	public OpenSslWrapperArgumentList addPassout(String password) {
+		return addStringParameter(PASSOUT_SWITCH, password); 
+	}
+	
+	public OpenSslWrapperArgumentList addStdinPassout() {
+		return addPassout(STDIN); 
+	}
+	
+	public OpenSslWrapperArgumentList addKeyLength(int keyLength) {
+		return addSwitchParameter(Integer.toString(keyLength));
+	}
+	
+	public OpenSslWrapperArgumentList setReq() {
+		return addSwitchParameter(REQ_SWITCH);
+	}
+	
+	public OpenSslWrapperArgumentList setNew() {
+		return addSwitchParameter(NEW_SWITCH);
+	}
+	
+	public OpenSslWrapperArgumentList addDays(int noOfDays) {
+		return addStringParameter("-days", Integer.toString(noOfDays));
+	}
+	
+	public OpenSslWrapperArgumentList setX509() {
+		return addSwitchParameter(X509_SWITCH);
+	}
+	
+	public OpenSslWrapperArgumentList addStdinPassin() {
+		return addPassin(STDIN);
+	}
+	
+	public OpenSslWrapperArgumentList addPassin(String password) {
+		return addStringParameter(PASSIN_SWITCH, password);
+	}
+	
+	public OpenSslWrapperArgumentList addSubject(String subject) {
+		return addStringParameter(SUBJECT_SWITCH, subject);
 	}
 	
 }

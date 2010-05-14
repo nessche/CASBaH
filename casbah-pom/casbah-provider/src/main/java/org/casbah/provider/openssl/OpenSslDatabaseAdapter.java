@@ -1,9 +1,14 @@
 package org.casbah.provider.openssl;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -81,6 +86,19 @@ public class OpenSslDatabaseAdapter {
 			parse();
 		}
  		return new ArrayList<CertificateMetainfo>(certs);
+	}
+	
+	public void createEmptyDatabase() throws CAProviderException {
+		try {
+			if (databaseFile.exists()) {
+				databaseFile.delete();
+			}
+			FileWriter writer = new FileWriter(databaseFile);
+			writer.write("\n");
+			writer.close();
+		} catch (IOException e) {
+			throw new CAProviderException("Could not initialize database", e);
+		}	
 	}
 	
 }

@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import org.casbah.provider.CAProviderException;
@@ -35,5 +36,17 @@ public class OpenSslSerialAdapter {
  				e.printStackTrace();
  			}
  		}
+	}
+	
+	public void initializeSerialNumberFile() throws CAProviderException {
+		try {
+			if (!serialNumberFile.exists()) {
+				FileWriter writer = new FileWriter(serialNumberFile);
+				writer.write("01\n\n");
+				writer.close();
+			}
+		} catch (IOException ioe) {
+			throw new CAProviderException("Could not initialize serial number file", ioe);
+		}
 	}
 }

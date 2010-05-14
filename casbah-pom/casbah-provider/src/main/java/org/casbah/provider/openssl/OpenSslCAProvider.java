@@ -10,6 +10,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.security.auth.x500.X500Principal;
 
@@ -19,20 +20,27 @@ import org.casbah.provider.CertificateMetainfo;
 
 public class OpenSslCAProvider implements CAProvider{
 
+
+
+	private static final Logger logger = Logger.getLogger(OpenSslCAProvider.class.getCanonicalName());
+	private static final String KEY_FILE = "keys" + File.separatorChar + "ca.key";
+	private static final String CACERT_FILE = "certs" + File.separatorChar + "ca.cer";
 	private static final String SERIAL_FILE = "serial.txt";
 	private static final String CERT_SUFFIX = ".pem";
 	private static final String DATABASE_FILE = "database.txt";
 	private static final String CERT_PATH = "certs";
+	private static final String KEY_PATH = "keys";
+	private static final String REQ_PATH = "requests";
 	private static final String CA_PUBLIC_CERT = "ca.cer";
 	private static final String CONFIG_FILE = "openssl.cnf";
 	private final File caRootDir;
-	private final String keypass;
+	private String keypass;
 	private final String openSslExecutable;
 
-	public OpenSslCAProvider(final String openSslExecutable, final String caRootDir, String keypass) {
+	public OpenSslCAProvider(final String openSslExecutable, final File caRootDir, String keypass) {
 		this.openSslExecutable = openSslExecutable;
 		this.keypass = keypass;
-		this.caRootDir = new File(caRootDir);
+		this.caRootDir = caRootDir;
 	}
 	
 	@Override
@@ -83,14 +91,14 @@ public class OpenSslCAProvider implements CAProvider{
 			OpenSslWrapper wrapper = new OpenSslWrapper(openSslExecutable, caRootDir);
 			StringBuffer output = new StringBuffer();
 			StringBuffer error = new StringBuffer();
+			StringBuffer input = new StringBuffer(keypass + "\n");
 			OpenSslWrapperArgumentList args = new OpenSslWrapperArgumentList();
 			args.setCA().setNoText().setBatch().addConfig(new File(caRootDir, CONFIG_FILE))
-				.addInFile(tempFile).addOutdir(new File(caRootDir, CERT_PATH)).addKey(keypass).addVerbose();
-			if (wrapper.executeCommand(output, error, args.toList()) == 0) {
+				.addInFile(tempFile).addOutdir(new File(caRootDir, CERT_PATH)).addStdinPassin().setVerbose();
+			if (wrapper.executeCommand(input, output, error, args.toList()) == 0) {
 				return getCertificate(new File(new File(caRootDir, CERT_PATH), nextSerial + CERT_SUFFIX));
 			} else {
-				System.out.println(error);
-				throw new CAProviderException("Error while signing the certificate", null);
+				throw new CAProviderException("Error while signing the certificate", new OpenSslNativeException(error.toString()));
 			}
 
 		} catch (InterruptedException ie) {
@@ -113,29 +121,29 @@ public class OpenSslCAProvider implements CAProvider{
 		if (!caRootDir.exists() || !caRootDir.isDirectory() || !caRootDir.canWrite()) {
 			return false;
 		}
-		File caKey = new File(caRootDir, "keys" + File.separatorChar + "ca.key");
+		File caKey = new File(caRootDir, KEY_FILE);
 		if (!caKey.exists() || !caKey.isFile() || !caKey.canRead()) {
-			System.out.println("private key is not present");
+			logger.warning("private key is not present");
 			return false;
 		}
 		File caCert = new File(new File(caRootDir, CERT_PATH) , CA_PUBLIC_CERT);
 		if (!caCert.exists() || !caCert.isFile() || !caCert.canRead()) {
-			System.out.println("public certificate not present");
+			logger.warning("public certificate not present");
 			return false;
 		}
-		File caReqs = new File(caRootDir, "requests");
+		File caReqs = new File(caRootDir, REQ_PATH);
 		if (!caReqs.exists() || !caReqs.isDirectory() || !caReqs.canWrite()) {
-			System.out.println("requests directory not present");
+			logger.warning("requests directory not present");
 			return false;
 		}
-		File database = new File(caRootDir, "database.txt");
+		File database = new File(caRootDir, DATABASE_FILE);
 		if (!database.exists() || !database.isFile() || !database.canWrite()) {
-			System.out.println("database file not present");
+			logger.warning("database file not present");
 			return false;
 		}
 		File serial = new File(caRootDir, SERIAL_FILE);
 		if (!serial.exists() || !serial.isFile() || !serial.canWrite()) {
-			System.out.println("serial number file not present");
+			logger.warning("serial number file not present");
 			return false;
 		}
 		return true;
@@ -155,12 +163,13 @@ public class OpenSslCAProvider implements CAProvider{
 	
 	@Override
 	public String getProviderVersion() throws CAProviderException {
+		
 		try {
 			OpenSslWrapper wrapper = new OpenSslWrapper(openSslExecutable, caRootDir);
-			OpenSslWrapperArgumentList args = new OpenSslWrapperArgumentList().addVersionSwitch();
+			OpenSslWrapperArgumentList args = new OpenSslWrapperArgumentList().setVersion();
 			StringBuffer output = new StringBuffer();
 			StringBuffer error = new StringBuffer();
-			int result = wrapper.executeCommand(output, error, args.toList());
+			int result = wrapper.executeCommand(null, output, error, args.toList());
 			if (result != 0) {
 				throw new CAProviderException("Could not execute " + openSslExecutable, null);
 			}
@@ -175,9 +184,75 @@ public class OpenSslCAProvider implements CAProvider{
 	}
 
 	@Override
-	public boolean setUpCA(X500Principal principal, String keypass) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean setUpCA(X500Principal principal, String keypass) throws CAProviderException {
+		generateDirectoryStructure();
+		generatePrivateKey(keypass);
+		generateSelfSignedCert(principal, keypass);
+		OpenSslDatabaseAdapter dbAdapter = new OpenSslDatabaseAdapter(new File(caRootDir, DATABASE_FILE));
+		dbAdapter.createEmptyDatabase();
+		OpenSslSerialAdapter serialAdapter = new OpenSslSerialAdapter(new File(caRootDir, SERIAL_FILE));
+		serialAdapter.initializeSerialNumberFile();
+		return true;
+	}
+	
+	private void generateDirectoryStructure() {
+		File certDir = new File(caRootDir, CERT_PATH);
+		if (!certDir.exists()) {
+			certDir.mkdirs();
+		}
+		File requestDir = new File(caRootDir, REQ_PATH);
+		if (!requestDir.exists()) {
+			requestDir.mkdirs();
+		}
+		File keyDir = new File(caRootDir, KEY_PATH);
+		if (!keyDir.exists()) {
+			keyDir.mkdirs();
+		}
+	}
+	
+	private void generatePrivateKey(String keypass) throws CAProviderException {
+		try {
+			logger.info("Key generation started");
+			OpenSslWrapper wrapper = new OpenSslWrapper(openSslExecutable, caRootDir);
+			OpenSslWrapperArgumentList args = new OpenSslWrapperArgumentList().addGenrsa().
+				addStdinPassout().setDes3().addOutFile(new File(caRootDir, KEY_FILE)).
+				addKeyLength(2048);
+			StringBuffer input = new StringBuffer(keypass);
+			StringBuffer output = new StringBuffer();
+			StringBuffer error = new StringBuffer();
+			input.append("\n");
+			if (wrapper.executeCommand(input, output, error, args.toList()) != 0) {
+				throw new CAProviderException("Could not generate the private key", null);
+			}
+			this.keypass = keypass;
+		} catch (InterruptedException ie) {
+			throw new CAProviderException("Could not generate the private key", ie);
+		} catch (IOException ioe) {
+			throw new CAProviderException("An IO error prevented key generation", ioe);
+		}
+	}
+	
+	private void generateSelfSignedCert(X500Principal principal, String keypass) throws CAProviderException {
+		try {
+			String subject = OpenSslDnConverter.convertToOpenSsl(principal.getName());
+			
+			
+			OpenSslWrapper wrapper = new OpenSslWrapper(openSslExecutable, caRootDir);
+			OpenSslWrapperArgumentList args = new OpenSslWrapperArgumentList().setReq().
+				setNew().setX509().setBatch().addDays(365).addSubject(subject).addStdinPassin().
+				addKey(new File(caRootDir,KEY_FILE)).addOutFile(new File(caRootDir, CACERT_FILE));
+			StringBuffer input = new StringBuffer(keypass + "\n");
+			StringBuffer output = new StringBuffer();
+			StringBuffer error = new StringBuffer();
+			input.append("\n");
+			if (wrapper.executeCommand(input, output, error, args.toList()) != 0) {
+				throw new CAProviderException("Could not generated self-signed cert", null);
+			}
+		} catch (InterruptedException e) {
+			throw new CAProviderException("Generation of self-signed certificate failed", e);
+		} catch (IOException e) {
+			throw new CAProviderException("Generation of self-signed certificate failed", e);
+		}
 	}
  
 }

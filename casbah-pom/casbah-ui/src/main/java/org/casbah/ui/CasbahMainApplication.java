@@ -15,7 +15,9 @@
  */
 package org.casbah.ui;
 
+import java.io.File;
 import java.security.cert.X509Certificate;
+import java.util.logging.Logger;
 
 import org.casbah.provider.CAProvider;
 import org.casbah.provider.CAProviderException;
@@ -32,20 +34,30 @@ import com.vaadin.ui.Window;
 @SuppressWarnings("serial")
 public class CasbahMainApplication extends Application
 {
-    private static final String CASBAH_CAROOT = "CASBAH_CAROOT";
+
+	private static final Logger logger = Logger.getLogger(CasbahMainApplication.class.getCanonicalName());
+	
 	private Window window;
     private CAProvider provider;
+    private File casbahHome;
 
     @Override
     public void init()
     {
     	try {
 	        window = new Window("CASBaH Application");
-	        provider = new OpenSslCAProvider("openssl",System.getenv(CASBAH_CAROOT), "casbah");
+	        casbahHome = CasbahConfiguration.getCasbahHomeDirectory();
+	        provider = new OpenSslCAProvider("openssl", new File(casbahHome, "caroot"), "casbah");
+	        if (!provider.isCASetup()) {
+	        	logger.warning("CA is not setup, setting it up now");
+	        	provider.setUpCA(CasbahConfiguration.getDefaultPrincipal(), "casbah");
+	        }
 	        setMainWindow(window);
 	        buildMainLayout();
     	} catch (CAProviderException cpe) {
     		cpe.printStackTrace();
+    	} catch (CasbahException ce) {
+    		ce.printStackTrace();
     	}
 
     }

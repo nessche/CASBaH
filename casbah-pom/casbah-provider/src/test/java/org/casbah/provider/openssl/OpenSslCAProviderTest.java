@@ -13,6 +13,9 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
+import javax.security.auth.x500.X500Principal;
+
+import org.apache.commons.io.FileUtils;
 import org.casbah.provider.CAProviderException;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,11 +25,17 @@ public class OpenSslCAProviderTest {
 	private static final String PASSWORD = "casbah";
 	private static final String CAROOT = File.separatorChar + "caroot";
 	private static final String OPENSSL = "openssl";
-	private String targetDir;
+	private File targetDir;
+	private File newCaRoot;
 
 	@Before
-	public void setup() {
-		targetDir = System.getProperty("basedir") + File.separatorChar + "target" + File.separatorChar + "test-classes";
+	public void setup() throws IOException {
+		targetDir = new File(System.getProperty("basedir") + File.separatorChar + "target" +
+				File.separatorChar + "test-classes");
+		newCaRoot = new File(targetDir,"newcaroot");
+		if (newCaRoot.exists()) {
+			FileUtils.deleteDirectory(newCaRoot);
+		}
 	}
 	
 	private void rollbackPreviousTests() {
@@ -49,13 +58,13 @@ public class OpenSslCAProviderTest {
 	@Test
 	public void testIsCASetup() {
 		System.out.println("Target dir is set to: " + targetDir);
-		OpenSslCAProvider provider = new OpenSslCAProvider(OPENSSL, targetDir + CAROOT, PASSWORD);
+		OpenSslCAProvider provider = new OpenSslCAProvider(OPENSSL, new File(targetDir, CAROOT), PASSWORD);
 		assertTrue("Checking with correct directory", provider.isCASetup());
 	}
 	
 	@Test
 	public void testGetCACertificate() throws CAProviderException {
-		OpenSslCAProvider provider = new OpenSslCAProvider(OPENSSL, targetDir + CAROOT, PASSWORD);
+		OpenSslCAProvider provider = new OpenSslCAProvider(OPENSSL, new File(targetDir, CAROOT), PASSWORD);
 		Certificate caCert = provider.getCACertificate();
 		assertNotNull("Checking ca cert is not null", caCert);
 		assertTrue("Checking certificate is an X.509 one", caCert instanceof X509Certificate);
@@ -70,7 +79,7 @@ public class OpenSslCAProviderTest {
 		rollbackPreviousTests();
 		
 		String csr = fileIntoString(new File(targetDir,"/client/requests/03.csr"));
-		OpenSslCAProvider provider = new OpenSslCAProvider(OPENSSL, targetDir + CAROOT, PASSWORD);
+		OpenSslCAProvider provider = new OpenSslCAProvider(OPENSSL, new File(targetDir, CAROOT), PASSWORD);
 		X509Certificate cert = provider.sign(csr);
 		assertNotNull(cert);
 		assertEquals(new BigInteger("03"), cert.getSerialNumber());
@@ -79,15 +88,24 @@ public class OpenSslCAProviderTest {
 	
 	@Test
 	public void testGetProviderVersion_correctProvider() throws CAProviderException {
-		OpenSslCAProvider provider = new OpenSslCAProvider(OPENSSL, targetDir + CAROOT, PASSWORD);
+		OpenSslCAProvider provider = new OpenSslCAProvider(OPENSSL, new File(targetDir, CAROOT), PASSWORD);
 		String providerVersion = provider.getProviderVersion();
 		assertTrue(providerVersion.startsWith("OpenSSL"));
 	}
 	
 	@Test(expected=CAProviderException.class)
 	public void testGetProviderVersion_nonExistingProvider() throws CAProviderException {
-		OpenSslCAProvider provider = new OpenSslCAProvider("oppenssl", targetDir + CAROOT, PASSWORD);
+		OpenSslCAProvider provider = new OpenSslCAProvider("oppenssl", new File(targetDir, CAROOT), PASSWORD);
 		provider.getProviderVersion();
+	}
+	
+	@Test
+	public void testSetupCa() throws CAProviderException {
+		OpenSslCAProvider provider = new OpenSslCAProvider(OPENSSL, newCaRoot, PASSWORD);
+		X500Principal principal = new X500Principal("C=FI, ST=Uusimaa, L=Helsinki, O=Harhaanjohtaja.com, CN=Casbah New CA");
+		assertTrue(provider.setUpCA(principal, PASSWORD));
+		assertTrue(newCaRoot.exists());
+		assertTrue(newCaRoot.isDirectory());
 	}
 	
 	private String fileIntoString(File file) throws IOException {

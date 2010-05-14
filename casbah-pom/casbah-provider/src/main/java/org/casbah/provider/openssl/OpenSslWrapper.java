@@ -1,5 +1,7 @@
 package org.casbah.provider.openssl;
 
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,7 +23,7 @@ public class OpenSslWrapper {
 		
 	}
 	
-	public int executeCommand(StringBuffer output, StringBuffer error, final List<String> parameters) throws IOException, InterruptedException {
+	public int executeCommand(StringBuffer input, StringBuffer output, StringBuffer error, final List<String> parameters) throws IOException, InterruptedException {
 		List<String> fullParams = new ArrayList<String>(parameters);
 		fullParams.add(0, opensslExecutable);
 		ProcessBuilder processBuilder = new ProcessBuilder(fullParams);
@@ -29,6 +31,11 @@ public class OpenSslWrapper {
 		Map<String, String> env = processBuilder.environment();
 		env.put(CASBAH_SSL_CA_ROOT, caRootDir.getAbsolutePath());
 		Process proc = processBuilder.start();
+		if (input != null) {
+			BufferedOutputStream stdin = new BufferedOutputStream(proc.getOutputStream());
+			stdin.write(input.toString().getBytes());
+			stdin.flush();
+		}
 		StreamConsumer outputConsumer = new StreamConsumer(output, proc.getInputStream(), barrier, TIMEOUT);
 		StreamConsumer errorConsumer = new StreamConsumer(error, proc.getErrorStream(), barrier, TIMEOUT);
 		outputConsumer.start();

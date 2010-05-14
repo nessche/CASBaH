@@ -3,6 +3,8 @@ package org.casbah.provider;
 import java.security.cert.X509Certificate;
 import java.util.List;
 
+import javax.security.auth.x500.X500Principal;
+
 public interface CAProvider {
 
 	List<CertificateMetainfo> getIssuedCertificates() throws CAProviderException;
@@ -16,6 +18,8 @@ public interface CAProvider {
 	String getProviderVersion() throws CAProviderException;
 	
 	boolean isCASetup();
+	
+	boolean setUpCA(X500Principal principal, String keypass) throws CAProviderException;
 	
 	
 	
