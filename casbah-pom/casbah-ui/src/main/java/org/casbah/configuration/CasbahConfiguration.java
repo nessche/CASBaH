@@ -1,4 +1,4 @@
-package org.casbah.ui;
+package org.casbah.configuration;
 
 import java.io.File;
 import java.util.logging.Logger;

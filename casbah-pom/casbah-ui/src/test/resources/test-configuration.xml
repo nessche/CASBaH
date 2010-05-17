@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<casbah-configuration>
+	<openssl-configuration>
+	  <keypass>casbah</keypass>
+	  <caroot>caroot</caroot>
+	</openssl-configuration>
+</casbah-configuration>

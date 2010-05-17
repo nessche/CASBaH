@@ -20,6 +20,7 @@ import java.security.cert.X509Certificate;
 import java.util.logging.Logger;
 
 import org.casbah.common.CasbahException;
+import org.casbah.configuration.CasbahConfiguration;
 import org.casbah.provider.CAProvider;
 import org.casbah.provider.CAProviderException;
 import org.casbah.provider.openssl.OpenSslCAProvider;
