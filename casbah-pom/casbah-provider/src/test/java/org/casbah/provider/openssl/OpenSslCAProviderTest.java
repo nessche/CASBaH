@@ -106,6 +106,7 @@ public class OpenSslCAProviderTest {
 		assertTrue(provider.setUpCA(principal, PASSWORD));
 		assertTrue(newCaRoot.exists());
 		assertTrue(newCaRoot.isDirectory());
+		assertTrue(provider.isCASetup());
 	}
 	
 	private String fileIntoString(File file) throws IOException {

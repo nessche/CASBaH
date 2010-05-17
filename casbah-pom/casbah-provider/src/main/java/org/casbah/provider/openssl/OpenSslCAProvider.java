@@ -4,8 +4,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -186,6 +188,7 @@ public class OpenSslCAProvider implements CAProvider{
 	@Override
 	public boolean setUpCA(X500Principal principal, String keypass) throws CAProviderException {
 		generateDirectoryStructure();
+		copyDefaultCnfFile();
 		generatePrivateKey(keypass);
 		generateSelfSignedCert(principal, keypass);
 		OpenSslDatabaseAdapter dbAdapter = new OpenSslDatabaseAdapter(new File(caRootDir, DATABASE_FILE));
@@ -207,6 +210,19 @@ public class OpenSslCAProvider implements CAProvider{
 		File keyDir = new File(caRootDir, KEY_PATH);
 		if (!keyDir.exists()) {
 			keyDir.mkdirs();
+		}
+	}
+	
+	private void copyDefaultCnfFile() throws CAProviderException {
+		try {
+			InputStream in = this.getClass().getResourceAsStream("/org/casbah/provider/openssl/" + CONFIG_FILE);
+			FileOutputStream out = new FileOutputStream(new File(caRootDir,CONFIG_FILE));
+			int i = 0;
+			while ((i = in.read()) != -1) {
+				out.write(i);
+			}
+		} catch (Exception e) {
+			throw new CAProviderException("Could not create default openssl.cnf", e);
 		}
 	}
 	

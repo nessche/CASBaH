@@ -39,15 +39,14 @@ public class CasbahMainApplication extends Application
 	
 	private Window window;
     private CAProvider provider;
-    private File casbahHome;
 
     @Override
     public void init()
     {
     	try {
 	        window = new Window("CASBaH Application");
-	        casbahHome = CasbahConfiguration.getCasbahHomeDirectory();
-	        provider = new OpenSslCAProvider("openssl", new File(casbahHome, "caroot"), "casbah");
+	        CasbahConfiguration config = CasbahConfiguration.loadConfiguration();
+	        provider = config.getProvider();
 	        if (!provider.isCASetup()) {
 	        	logger.warning("CA is not setup, setting it up now");
 	        	provider.setUpCA(CasbahConfiguration.getDefaultPrincipal(), "casbah");

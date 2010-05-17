@@ -12,6 +12,9 @@
     <module>casbah-ui</module>
     <module>casbah-embedded</module>
   </modules>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
 
   <build>
   	<plugins>

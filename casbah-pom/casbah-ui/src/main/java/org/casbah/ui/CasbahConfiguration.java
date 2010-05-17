@@ -5,6 +5,9 @@ import java.util.logging.Logger;
 
 import javax.security.auth.x500.X500Principal;
 
+import org.casbah.provider.CAProvider;
+import org.casbah.provider.openssl.OpenSslCAProvider;
+
 
 public class CasbahConfiguration {
 
@@ -13,7 +16,15 @@ public class CasbahConfiguration {
 	private static final String CASBAH_DEFAULT_DIR = ".casbah";
 	private static final String USER_HOME = "user.home";
 	private static final String CASBAH_HOME = "CASBAH_HOME";
+	
+	private final File casbahHomeDirectory;
 
+	private ProviderConfiguration providerConfiguration;
+
+	private CasbahConfiguration(File casbahHomeDirectory) {
+		this.casbahHomeDirectory = casbahHomeDirectory;
+	}
+	
 	public static File getCasbahHomeDirectory() throws CasbahException {
 		// the order is first system properties and then env properties
 		
@@ -41,6 +52,29 @@ public class CasbahConfiguration {
 	
 	public static X500Principal getDefaultPrincipal() {
 		return new X500Principal("C=FI, ST=Uusimaa, L=Helsinki, O=Harhaanjohtaja.com, CN=Casbah Test CA");
+	}
+	
+	public static CasbahConfiguration getDefaultConfiguration() throws CasbahException {
+		CasbahConfiguration config = new CasbahConfiguration(getCasbahHomeDirectory());
+		OpenSslProviderConfiguration providerConfiguration = new OpenSslProviderConfiguration();
+		providerConfiguration.setKeypass("casbah");
+		providerConfiguration.setExecutablePath("");
+		providerConfiguration.setCaroot("caroot");
+		config.setProviderConfiguration(providerConfiguration);
+		return config;
+	}
+	
+
+	public void setProviderConfiguration(ProviderConfiguration providerConfiguration) {
+		this.providerConfiguration = providerConfiguration;		
+	}
+
+	public static CasbahConfiguration loadConfiguration() throws CasbahException {
+		return getDefaultConfiguration();
+	}
+
+	public CAProvider getProvider() throws CasbahException {
+		return providerConfiguration.getInstance(casbahHomeDirectory);
 	}
 	
 }
