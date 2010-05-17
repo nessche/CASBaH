@@ -5,6 +5,7 @@ import java.util.logging.Logger;
 
 import javax.security.auth.x500.X500Principal;
 
+import org.casbah.common.CasbahException;
 import org.casbah.provider.CAProvider;
 import org.casbah.provider.openssl.OpenSslCAProvider;
 

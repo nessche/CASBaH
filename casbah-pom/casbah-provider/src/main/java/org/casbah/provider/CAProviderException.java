@@ -1,6 +1,8 @@
 package org.casbah.provider;
 
-public class CAProviderException extends Exception {
+import org.casbah.common.CasbahException;
+
+public class CAProviderException extends CasbahException {
 
 	private static final long serialVersionUID = 318881955466985649L;
 

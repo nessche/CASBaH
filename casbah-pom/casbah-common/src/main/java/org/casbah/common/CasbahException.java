@@ -1,4 +1,4 @@
-package org.casbah.ui;
+package org.casbah.common;
 
 public class CasbahException extends Exception {
 

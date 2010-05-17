@@ -140,6 +140,11 @@
         -->
         <dependency>
         	<groupId>com.harhaanjohtaja</groupId>
+        	<artifactId>casbah-common</artifactId>
+        	<version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+        	<groupId>com.harhaanjohtaja</groupId>
         	<artifactId>casbah-provider</artifactId>
         	<version>0.0.1-SNAPSHOT</version>
         	<scope>compile</scope>
