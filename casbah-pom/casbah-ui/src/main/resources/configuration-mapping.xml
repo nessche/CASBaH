@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapping PUBLIC "-//EXOLAB/Castor Mapping DTD Version 1.0//EN"
+                         "http://castor.org/mapping.dtd">
+ <mapping>
+ 	<class name="org.casbah.configuration.CasbahConfiguration">
+ 		<field name="providerConfiguration" type="org.casbash.configuration.ProviderConfiguration" required="true">
+ 			<bind-xml auto-naming="deriveByClass" node="element"/>
+ 		</field>
+ 	</class>
+ 	
+ 	<class name="org.casbah.configuration.OpenSslProviderConfiguration">
+ 	    <map-to xml="openssl-configuration" />
+ 	</class>
+ 	
+ </mapping>
+ 
+
