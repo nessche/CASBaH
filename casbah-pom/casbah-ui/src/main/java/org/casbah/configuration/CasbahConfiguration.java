@@ -8,6 +8,7 @@ import javax.security.auth.x500.X500Principal;
 import org.casbah.common.CasbahException;
 import org.casbah.provider.CAProvider;
 import org.casbah.provider.openssl.OpenSslCAProvider;
+import org.exolab.castor.xml.Unmarshaller;
 
 
 public class CasbahConfiguration {
@@ -17,18 +18,24 @@ public class CasbahConfiguration {
 	private static final String CASBAH_DEFAULT_DIR = ".casbah";
 	private static final String USER_HOME = "user.home";
 	private static final String CASBAH_HOME = "CASBAH_HOME";
+	private static final String CONFIG_FILE = "casbah-config.xml";
 	
-	private final File casbahHomeDirectory;
-
+	private File casbahHomeDirectory;
 	private ProviderConfiguration providerConfiguration;
 
 	private CasbahConfiguration(File casbahHomeDirectory) {
 		this.casbahHomeDirectory = casbahHomeDirectory;
 	}
 	
-	public static File getCasbahHomeDirectory() throws CasbahException {
-		// the order is first system properties and then env properties
-		
+	public CasbahConfiguration() {
+		// public constructor needed by Castor unmarshalling
+	}
+	
+	public File getCasbahHomeDirectory() throws CasbahException {
+		return casbahHomeDirectory;
+	}
+	
+	private static File calculateHomeDirectory() throws CasbahException {
 		String casbahRoot = System.getProperty(CASBAH_HOME, System.getenv(CASBAH_HOME));
 		File casbahHome = null;
 		if (casbahRoot == null) {
@@ -48,7 +55,7 @@ public class CasbahConfiguration {
 			logger.info(casbahHome.getAbsolutePath() + " does not exist, trying to create it");
 			casbahHome.mkdirs();
 		}
-		return casbahHome;
+		return casbahHome;		
 	}
 	
 	public static X500Principal getDefaultPrincipal() {
@@ -56,7 +63,8 @@ public class CasbahConfiguration {
 	}
 	
 	public static CasbahConfiguration getDefaultConfiguration() throws CasbahException {
-		CasbahConfiguration config = new CasbahConfiguration(getCasbahHomeDirectory());
+		
+		CasbahConfiguration config = new CasbahConfiguration(calculateHomeDirectory());
 		OpenSslProviderConfiguration providerConfiguration = new OpenSslProviderConfiguration();
 		providerConfiguration.setKeypass("casbah");
 		providerConfiguration.setExecutablePath("");
@@ -71,11 +79,19 @@ public class CasbahConfiguration {
 	}
 
 	public static CasbahConfiguration loadConfiguration() throws CasbahException {
+		File casbahHome = calculateHomeDirectory();
+		File configFile = new File(casbahHome, CONFIG_FILE);
+		CasbahConfiguration result = CasbahConfigurationHelper.loadFromFile(configFile);
+		result.setCasbahHomeDirectory(casbahHome);
 		return getDefaultConfiguration();
 	}
 
 	public CAProvider getProvider() throws CasbahException {
 		return providerConfiguration.getInstance(casbahHomeDirectory);
+	}
+	
+	public void setCasbahHomeDirectory(File casbahHomeDirectory) {
+		this.casbahHomeDirectory = casbahHomeDirectory;
 	}
 	
 }
