@@ -1,14 +1,18 @@
 package org.casbah.configuration;
 
 import java.io.File;
+import java.util.logging.Logger;
 
 import org.casbah.common.CasbahException;
+import org.casbah.common.EqualsUtil;
+import org.casbah.common.Hash;
 import org.casbah.provider.CAProvider;
 import org.casbah.provider.openssl.OpenSslCAProvider;
 
 public class OpenSslProviderConfiguration implements ProviderConfiguration {
 
 	private static final String OPENSSL_EXECUTABLE = "openssl";
+	private static final Logger logger = Logger.getLogger(OpenSslProviderConfiguration.class.getCanonicalName());
 	
 	private String caroot;
 	private String keypass;
@@ -63,6 +67,24 @@ public class OpenSslProviderConfiguration implements ProviderConfiguration {
 
 	public String getCaroot() {
 		return caroot;
+	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if (this == other) {
+			return true;
+		}
+		if(!(other instanceof OpenSslProviderConfiguration)) {
+			return false;
+		}
+		OpenSslProviderConfiguration otherConfig = (OpenSslProviderConfiguration) other;
+		return EqualsUtil.areEqual(this.executablePath, otherConfig.getExecutablePath()) &&
+			EqualsUtil.areEqual(this.caroot, otherConfig.getCaroot()) &&
+			EqualsUtil.areEqual(this.keypass, otherConfig.getKeypass());
+	}
+	
+	public int hashCode() {
+		return new Hash().add(executablePath).add(caroot).add(keypass).hashCode();
 	}
 	
 	

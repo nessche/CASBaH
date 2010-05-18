@@ -15,7 +15,7 @@ public class CasbahConfigurationHelper {
 	private static Mapping getMapping() {
 		Mapping mapping = new Mapping();
 		mapping.loadMapping(new InputSource(
-				CasbahConfigurationHelper.class.getResourceAsStream("configuration-mapping.xml")));
+				CasbahConfigurationHelper.class.getResourceAsStream("/configuration-mapping.xml")));
 		return mapping;
 	}
 	

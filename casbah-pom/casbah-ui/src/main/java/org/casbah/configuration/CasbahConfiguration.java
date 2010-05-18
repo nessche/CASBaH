@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 import javax.security.auth.x500.X500Principal;
 
 import org.casbah.common.CasbahException;
+import org.casbah.common.EqualsUtil;
 import org.casbah.provider.CAProvider;
 import org.casbah.provider.openssl.OpenSslCAProvider;
 import org.exolab.castor.xml.Unmarshaller;
@@ -93,5 +94,29 @@ public class CasbahConfiguration {
 	public void setCasbahHomeDirectory(File casbahHomeDirectory) {
 		this.casbahHomeDirectory = casbahHomeDirectory;
 	}
+
+	public ProviderConfiguration getProviderConfiguration() {
+		return providerConfiguration;
+	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if (other == this) {
+			return true;
+		}
+		if (!(other instanceof CasbahConfiguration)) {
+			return false;
+		}
+		CasbahConfiguration otherConfig = (CasbahConfiguration) other;
+		return EqualsUtil.areEqual(this.providerConfiguration, otherConfig.getProviderConfiguration());
+		
+	}
+
+	@Override
+	public int hashCode() {
+		return (this.providerConfiguration == null ? 0 : this.providerConfiguration.hashCode());
+	}
+	
+
 	
 }

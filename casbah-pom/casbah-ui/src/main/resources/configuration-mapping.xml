@@ -3,12 +3,12 @@
                          "http://castor.org/mapping.dtd">
  <mapping>
  	<class name="org.casbah.configuration.CasbahConfiguration">
- 		<field name="providerConfiguration" type="org.casbash.configuration.ProviderConfiguration" required="true">
+ 		<field name="providerConfiguration" type="org.casbah.configuration.ProviderConfiguration" required="true">
  			<bind-xml auto-naming="deriveByClass" node="element"/>
  		</field>
  	</class>
  	
- 	<class name="org.casbah.configuration.OpenSslProviderConfiguration">
+ 	<class name="org.casbah.configuration.OpenSslProviderConfiguration" auto-complete="true">
  	    <map-to xml="openssl-configuration" />
  	</class>
  	
