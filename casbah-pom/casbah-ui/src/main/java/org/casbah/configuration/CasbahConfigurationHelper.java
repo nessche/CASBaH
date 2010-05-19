@@ -1,6 +1,7 @@
 package org.casbah.configuration;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 
@@ -19,7 +20,7 @@ public class CasbahConfigurationHelper {
 		return mapping;
 	}
 	
-	public static CasbahConfiguration loadFromFile(File configurationFile) throws CasbahException {
+	public static CasbahConfiguration loadFromFile(File configurationFile) throws CasbahException, FileNotFoundException {
 		try {
 			FileReader reader = new FileReader(configurationFile);
 			Unmarshaller unmarshaller = new Unmarshaller(getMapping());
@@ -29,6 +30,8 @@ public class CasbahConfigurationHelper {
 			}
 			reader.close();
 			return (CasbahConfiguration) configuration;
+		} catch (FileNotFoundException fnfe) {
+			throw fnfe;
 		} catch (Exception e) {
 			throw new CasbahException("Could not read configuration from file", e);
 		}

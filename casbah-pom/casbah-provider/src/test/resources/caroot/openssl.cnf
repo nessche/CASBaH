@@ -34,7 +34,7 @@ default_ca	= CA_default		# The default ca section
 ####################################################################
 [ CA_default ]
 
-dir		= $ENV::TEST_CA_ROOT		# Where everything is kept
+dir		= $ENV::CASBAH_SSL_CA_ROOT			# Where everything is kept
 certs		= $dir/certs		# Where the issued certs are kept
 crl_dir		= $dir/crl		# Where the issued crl are kept
 database	= $dir/database.txt	# database index file.
@@ -44,7 +44,7 @@ new_certs_dir	= $dir/newcerts		# default place for new certs.
 
 certificate	= $dir/certs/ca.cer 	# The CA certificate
 serial		= $dir/serial.txt 		# The current serial number
-crlnumber	= $dir/crlnumber	# the current crl number
+crlnumber	= $dir/crlnumber.txt	# the current crl number
 					# must be commented out to leave a V1 CRL
 crl		= $dir/crl.pem 		# The current CRL
 private_key	= $dir/keys/ca.key # The private key

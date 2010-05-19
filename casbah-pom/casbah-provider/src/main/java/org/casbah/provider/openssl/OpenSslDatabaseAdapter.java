@@ -93,9 +93,7 @@ public class OpenSslDatabaseAdapter {
 			if (databaseFile.exists()) {
 				databaseFile.delete();
 			}
-			FileWriter writer = new FileWriter(databaseFile);
-			writer.write("\n");
-			writer.close();
+			databaseFile.createNewFile();
 		} catch (IOException e) {
 			throw new CAProviderException("Could not initialize database", e);
 		}	

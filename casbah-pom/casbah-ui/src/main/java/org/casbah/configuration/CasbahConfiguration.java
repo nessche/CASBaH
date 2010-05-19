@@ -1,6 +1,7 @@
 package org.casbah.configuration;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.logging.Logger;
 
 import javax.security.auth.x500.X500Principal;
@@ -82,9 +83,16 @@ public class CasbahConfiguration {
 	public static CasbahConfiguration loadConfiguration() throws CasbahException {
 		File casbahHome = calculateHomeDirectory();
 		File configFile = new File(casbahHome, CONFIG_FILE);
-		CasbahConfiguration result = CasbahConfigurationHelper.loadFromFile(configFile);
+		CasbahConfiguration result = null;
+		try {
+			result = CasbahConfigurationHelper.loadFromFile(configFile);
+		} catch (FileNotFoundException fnfe) {
+			logger.warning("No configuration file found, creating one based on default");
+			result = getDefaultConfiguration();
+			CasbahConfigurationHelper.writeToFile(result, configFile);
+		}
 		result.setCasbahHomeDirectory(casbahHome);
-		return getDefaultConfiguration();
+		return result;
 	}
 
 	public CAProvider getProvider() throws CasbahException {

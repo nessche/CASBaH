@@ -15,7 +15,6 @@
  */
 package org.casbah.ui;
 
-import java.io.File;
 import java.security.cert.X509Certificate;
 import java.util.logging.Logger;
 

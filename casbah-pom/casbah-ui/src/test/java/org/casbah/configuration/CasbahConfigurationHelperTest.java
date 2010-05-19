@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import org.casbah.common.CasbahException;
@@ -13,7 +14,7 @@ import org.junit.Test;
 public class CasbahConfigurationHelperTest {
 
 	@Test
-	public void testReadFromFile() throws CasbahException {
+	public void testReadFromFile() throws CasbahException, FileNotFoundException {
 		
 		File configFile = new File(this.getClass().getResource("/test-configuration.xml").getFile());
 		CasbahConfiguration casbahConfiguration = CasbahConfigurationHelper.loadFromFile(configFile);

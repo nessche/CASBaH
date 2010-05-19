@@ -6,6 +6,7 @@ import java.util.List;
 
 public class OpenSslWrapperArgumentList {
 
+	private static final String CRLDAYS_SWITCH = "-crldays";
 	private static final String SUBJECT_SWITCH = "-subj";
 	private static final String PASSIN_SWITCH = "-passin";
 	private static final String X509_SWITCH = "-x509";
@@ -15,6 +16,7 @@ public class OpenSslWrapperArgumentList {
 	private static final String PASSOUT_SWITCH = "-passout";
 	private static final String DES3_SWITCH = "-des3";
 	private static final String GENRSA_SWITCH = "genrsa";
+	private static final String GENCRL_SWITCH = "-gencrl";
 	private static final String VERBOSE_SWITCH = "-verbose";
 	private static final String OUT_SWITCH = "-out";
 	private static final String IN_SWITCH = "-in";
@@ -133,6 +135,14 @@ public class OpenSslWrapperArgumentList {
 	
 	public OpenSslWrapperArgumentList addSubject(String subject) {
 		return addStringParameter(SUBJECT_SWITCH, subject);
+	}
+	
+	public OpenSslWrapperArgumentList setGencrl() {
+		return addSwitchParameter(GENCRL_SWITCH);
+	}
+	
+	public OpenSslWrapperArgumentList addCrlDays(int noOfDays) {
+		return addStringParameter(CRLDAYS_SWITCH, Integer.toString(noOfDays));
 	}
 	
 }

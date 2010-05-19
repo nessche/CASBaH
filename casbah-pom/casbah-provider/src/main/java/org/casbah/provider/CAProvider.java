@@ -1,5 +1,6 @@
 package org.casbah.provider;
 
+import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
 import java.util.List;
 
@@ -20,6 +21,8 @@ public interface CAProvider {
 	boolean isCASetup();
 	
 	boolean setUpCA(X500Principal principal, String keypass) throws CAProviderException;
+	
+	X509CRL getLatestCrl(boolean generateCrl) throws CAProviderException;
 	
 	
 	

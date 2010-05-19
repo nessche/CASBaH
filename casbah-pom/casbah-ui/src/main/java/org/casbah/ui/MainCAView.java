@@ -1,6 +1,9 @@
 package org.casbah.ui;
 
+import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.casbah.provider.CAProvider;
 import org.casbah.provider.CAProviderException;
@@ -17,11 +20,14 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Window.CloseEvent;
+import com.vaadin.ui.Window.Notification;
 
 public class MainCAView extends CustomComponent{
 
 	private static final String X509_CERT_MIME_TYPE = "application/x-x509-ca-cert";
+	private static final String X509_CRL_MIME_TYPE = "application/x-x509-crl";
 	
+	private static final Logger logger = Logger.getLogger(MainCAView.class.getCanonicalName());
 	private static final long serialVersionUID = 1L;
 
 	private final Application application;
@@ -100,6 +106,24 @@ public class MainCAView extends CustomComponent{
 							uploadAndSignCsr();
 						} catch (CAProviderException pe) {
 							pe.printStackTrace();
+						}
+						
+					}
+					
+				}));
+		
+		caButtons.addComponent(new Button("Get CRL",
+				new Button.ClickListener() {
+					private static final long serialVersionUID = 1L;
+
+					@Override
+					public void buttonClick(ClickEvent event) {
+						try {
+							downloadCrlList(provider.getLatestCrl(false));
+						} catch (CAProviderException pe) {
+							logger.log(Level.SEVERE, "Could not retrieve CRL", pe);
+							getWindow().showNotification("An error occurred while retrieving the CRL",
+									Notification.TYPE_ERROR_MESSAGE);
 						}
 						
 					}
@@ -205,6 +229,12 @@ public class MainCAView extends CustomComponent{
 	private void downloadEncodedCertificate(X509Certificate cert, String serialNumber) throws CAProviderException {
 		StringResource source = new StringResource(CertificateHelper.encodeCertificate(cert, true));
 		DownloadResource dr = new DownloadResource(source, X509_CERT_MIME_TYPE, serialNumber + ".crt", application);
+		application.getMainWindow().open(dr,"_new");
+	}
+	
+	private void downloadCrlList(X509CRL crl) throws CAProviderException {
+		StringResource source = new StringResource(CertificateHelper.encodeCrlList(crl, true));
+		DownloadResource dr = new DownloadResource(source, X509_CRL_MIME_TYPE, "ca.crl", application );
 		application.getMainWindow().open(dr,"_new");
 	}
 	

@@ -8,9 +8,13 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.cert.CRL;
+import java.security.cert.CRLException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -21,8 +25,6 @@ import org.casbah.provider.CAProviderException;
 import org.casbah.provider.CertificateMetainfo;
 
 public class OpenSslCAProvider implements CAProvider{
-
-
 
 	private static final Logger logger = Logger.getLogger(OpenSslCAProvider.class.getCanonicalName());
 	private static final String KEY_FILE = "keys" + File.separatorChar + "ca.key";
@@ -35,9 +37,15 @@ public class OpenSslCAProvider implements CAProvider{
 	private static final String REQ_PATH = "requests";
 	private static final String CA_PUBLIC_CERT = "ca.cer";
 	private static final String CONFIG_FILE = "openssl.cnf";
+	private static final String CRL_FILE = "crl.der";
+	private static final String CRL_NUMBER = "crlnumber.txt";
+	private static final int CRL_VALIDITY_DAYS = 7;	
+	
+	
 	private final File caRootDir;
 	private String keypass;
 	private final String openSslExecutable;
+
 
 	public OpenSslCAProvider(final String openSslExecutable, final File caRootDir, String keypass) {
 		this.openSslExecutable = openSslExecutable;
@@ -148,6 +156,11 @@ public class OpenSslCAProvider implements CAProvider{
 			logger.warning("serial number file not present");
 			return false;
 		}
+		File crlNumber = new File(caRootDir, CRL_NUMBER);
+		if (!crlNumber.exists() || (!crlNumber.isFile()) || (!crlNumber.canWrite())) {
+			logger.warning("CRL number file not present");
+			return false;
+		}
 		return true;
 	}
 
@@ -195,6 +208,7 @@ public class OpenSslCAProvider implements CAProvider{
 		dbAdapter.createEmptyDatabase();
 		OpenSslSerialAdapter serialAdapter = new OpenSslSerialAdapter(new File(caRootDir, SERIAL_FILE));
 		serialAdapter.initializeSerialNumberFile();
+		initializeCrlNumberFile();
 		return true;
 	}
 	
@@ -221,8 +235,20 @@ public class OpenSslCAProvider implements CAProvider{
 			while ((i = in.read()) != -1) {
 				out.write(i);
 			}
+			in.close();
+			out.close();
 		} catch (Exception e) {
 			throw new CAProviderException("Could not create default openssl.cnf", e);
+		}
+	}
+	
+	private void initializeCrlNumberFile() throws CAProviderException {
+		try {
+			FileWriter writer = new FileWriter(new File(caRootDir, CRL_NUMBER));
+			writer.write("01\n");
+			writer.close();
+		} catch (IOException e) {
+			throw new CAProviderException("Could not initialize CRL number file", e);
 		}
 	}
 	
@@ -250,9 +276,7 @@ public class OpenSslCAProvider implements CAProvider{
 	
 	private void generateSelfSignedCert(X500Principal principal, String keypass) throws CAProviderException {
 		try {
-			String subject = OpenSslDnConverter.convertToOpenSsl(principal.getName());
-			
-			
+			String subject = OpenSslDnConverter.convertToOpenSsl(principal.getName());	
 			OpenSslWrapper wrapper = new OpenSslWrapper(openSslExecutable, caRootDir);
 			OpenSslWrapperArgumentList args = new OpenSslWrapperArgumentList().setReq().
 				setNew().setX509().setBatch().addDays(365).addSubject(subject).addStdinPassin().
@@ -270,5 +294,65 @@ public class OpenSslCAProvider implements CAProvider{
 			throw new CAProviderException("Generation of self-signed certificate failed", e);
 		}
 	}
+
+	@Override
+	public X509CRL getLatestCrl(boolean generateCrl) throws CAProviderException {
+		X509CRL result = null;
+		if (generateCrl) {
+			result = generateNewCrl();
+		} else {
+			try {
+				result = loadCrlFromFile();
+			} catch (FileNotFoundException fnfe) {
+				result = generateNewCrl();
+			} catch (CertificateException e) {
+				throw new CAProviderException("Could not parse CRL file", e);
+			} catch (CRLException e) {
+				throw new CAProviderException("Could not parse CRL file", e);
+			} catch (IOException e) {
+				throw new CAProviderException("Could not parse CRL file", e);
+			}
+			if (result.getNextUpdate().before(new Date())) {
+				result = generateNewCrl();
+			}
+		}
+		return result;
+	}
+	
+	private X509CRL loadCrlFromFile() throws FileNotFoundException, IOException, CRLException, CertificateException {
+		FileInputStream fis = new FileInputStream(new File(caRootDir, CRL_FILE));
+		CertificateFactory cf = CertificateFactory.getInstance("X.509");
+		X509CRL result = (X509CRL) cf.generateCRL(fis);
+		fis.close();
+		return result;
+	}
+	
+
+	private X509CRL generateNewCrl() throws CAProviderException {
+		try {
+			OpenSslWrapper wrapper = new OpenSslWrapper(openSslExecutable, caRootDir);
+			OpenSslWrapperArgumentList args = new OpenSslWrapperArgumentList().
+				setCA().addConfig(new File(caRootDir, CONFIG_FILE)).setGencrl().
+				addStdinPassin().
+				addCrlDays(CRL_VALIDITY_DAYS).addOutFile(new File(caRootDir,CRL_FILE));
+			StringBuffer input = new StringBuffer(keypass + "\n");
+			StringBuffer output = new StringBuffer();
+			StringBuffer error = new StringBuffer();			
+			if (wrapper.executeCommand(input, output, error, args.toList()) != 0) {
+				throw new CAProviderException("Could not generated CRL file", new OpenSslNativeException(error.toString()));
+			}
+		} catch (InterruptedException ie) {
+			throw new CAProviderException("An error prevented generation of new CRL file", ie);
+		} catch (IOException e) {
+			throw new CAProviderException("An error prevented generatio of new CRL file", e);
+		}
+		try {
+			return loadCrlFromFile();
+		} catch (Exception e) {
+			throw new CAProviderException("New crl has been generated but could not be read", e);
+		}
+	}
+		
+		
  
 }

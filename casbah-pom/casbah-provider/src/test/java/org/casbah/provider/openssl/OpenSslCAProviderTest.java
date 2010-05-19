@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
 
 import javax.security.auth.x500.X500Principal;
@@ -107,6 +108,13 @@ public class OpenSslCAProviderTest {
 		assertTrue(newCaRoot.exists());
 		assertTrue(newCaRoot.isDirectory());
 		assertTrue(provider.isCASetup());
+	}
+	
+	@Test
+	public void testGetLatestCrl() throws CAProviderException {
+		OpenSslCAProvider provider = new OpenSslCAProvider(OPENSSL, new File(targetDir, CAROOT), PASSWORD);
+		X509CRL crl = provider.getLatestCrl(true);
+		assertNotNull(crl);
 	}
 	
 	private String fileIntoString(File file) throws IOException {
