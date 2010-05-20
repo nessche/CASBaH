@@ -18,7 +18,7 @@ public class JNLPConsole extends JFrame {
 	private final JTextArea textArea = new JTextArea();
 
 	public JNLPConsole() throws HeadlessException, IOException {
-		super("Hudson Console");
+		super("CASBaH Console");
 
 		JScrollPane pane = new JScrollPane(textArea);
 		pane.setMinimumSize(new Dimension(400, 150));
