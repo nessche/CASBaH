@@ -31,34 +31,39 @@ public class MainCAView extends CustomComponent{
 	private static final long serialVersionUID = 1L;
 
 	private final Application application;
-
 	private final CAProvider provider;
 
-	public MainCAView(final CAProvider provider, final X509Certificate cert, Application application) {
+	public MainCAView(final CAProvider provider, Application application) {
 		
 		this.provider = provider;
 		this.application = application;
+		
+	}
+	
+	public void init() throws CAProviderException {
+
+		final X509Certificate caCert = provider.getCACertificate();
 		Panel panel = new Panel("CA Details");
 		panel.setContent(new VerticalLayout());
 		VerticalLayout caInfo = new VerticalLayout();		
 		TextField name = new TextField("Distinguished Name");
-		String nameValue = cert.getSubjectX500Principal().getName();
+		String nameValue = caCert.getSubjectX500Principal().getName();
 		name.setValue(nameValue);
 		name.setColumns(50);
 		name.setReadOnly(true);
 		
 		TextField issuer = new TextField("Issuer");
 		issuer.setColumns(50);
-		issuer.setValue(cert.getIssuerX500Principal().getName());
+		issuer.setValue(caCert.getIssuerX500Principal().getName());
 		issuer.setReadOnly(true);
 		
 		DateField expDate = new DateField("Expiration Date");
 		expDate.setResolution(DateField.RESOLUTION_SEC);
-		expDate.setValue(cert.getNotAfter());
+		expDate.setValue(caCert.getNotAfter());
 		expDate.setReadOnly(true);
 		
 		TextField serial = new TextField("Serial");
-		serial.setValue(cert.getSerialNumber().toString(16));
+		serial.setValue(caCert.getSerialNumber().toString(16));
 		serial.setReadOnly(true);
 		
 		caInfo.addComponent(name);
@@ -75,7 +80,7 @@ public class MainCAView extends CustomComponent{
 
 					public void buttonClick(ClickEvent event) {
 						try {
-							showEncodedCertificate(cert, cert.getSerialNumber().toString(16));
+							showEncodedCertificate(caCert, caCert.getSerialNumber().toString(16));
 						} catch (CAProviderException e) {
 							e.printStackTrace();
 						}	
@@ -89,7 +94,7 @@ public class MainCAView extends CustomComponent{
 
 					public void buttonClick(ClickEvent event) {
 						try {
-							downloadEncodedCertificate(cert, cert.getSerialNumber().toString(16));
+							downloadEncodedCertificate(caCert, caCert.getSerialNumber().toString(16));
 						} catch (CAProviderException e) {
 							e.printStackTrace();
 						}				

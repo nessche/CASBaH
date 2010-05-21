@@ -53,7 +53,7 @@ public class CasbahMainApplication extends Application
 	        	provider.setUpCA(CasbahConfiguration.getDefaultPrincipal(), "casbah");
 	        }
 	        setMainWindow(window);
-	        buildMainLayout();
+	        buildMainLayout(config);
     	} catch (CAProviderException cpe) {
     		cpe.printStackTrace();
     	} catch (CasbahException ce) {
@@ -62,20 +62,11 @@ public class CasbahMainApplication extends Application
 
     }
     
-    private void buildMainLayout() throws CAProviderException {
+    private void buildMainLayout(CasbahConfiguration config) throws CasbahException {
     	
-    	Panel mainPanel = new Panel("CASBaH");
-    	mainPanel.setSizeFull();
-    	SplitPanel splitPanel = new SplitPanel(SplitPanel.ORIENTATION_HORIZONTAL);
-    
-    	X509Certificate cert = provider.getCACertificate();
-    	MainCAView view = new MainCAView(provider, cert, this);
-    	IssuedCertificateList icl = new IssuedCertificateList(provider.getIssuedCertificates());
-    	splitPanel.addComponent(view);
-    	splitPanel.addComponent(icl);
-    	icl.setSizeFull();
-    	mainPanel.addComponent(splitPanel);
-    	getMainWindow().setContent(mainPanel);
+    	CasbahMainComponent mainComponent = new CasbahMainComponent(this, provider, config);
+    	mainComponent.init();
+    	getMainWindow().setContent(mainComponent);
     	
     }
     
