@@ -44,7 +44,9 @@ public class MainCAView extends CustomComponent{
 
 		final X509Certificate caCert = provider.getCACertificate();
 		Panel panel = new Panel("CA Details");
-		panel.setContent(new VerticalLayout());
+		VerticalLayout mainLayout = new VerticalLayout();
+		panel.setContent(mainLayout);
+		mainLayout.setSizeFull();
 		VerticalLayout caInfo = new VerticalLayout();		
 		TextField name = new TextField("Distinguished Name");
 		String nameValue = caCert.getSubjectX500Principal().getName();
@@ -70,7 +72,7 @@ public class MainCAView extends CustomComponent{
 		caInfo.addComponent(issuer);
 		caInfo.addComponent(expDate);
 		caInfo.addComponent(serial);
-		caInfo.setSizeUndefined();
+		caInfo.setSizeFull();
 		
 		HorizontalLayout caButtons = new HorizontalLayout();
 		caButtons.addComponent(new Button("View Certificate",
@@ -137,8 +139,8 @@ public class MainCAView extends CustomComponent{
 		
 		panel.addComponent(caInfo);
 		panel.addComponent(caButtons);
-
-        setSizeUndefined();
+		panel.setSizeFull();
+        setSizeFull();
 		setCompositionRoot(panel);
 
 	}

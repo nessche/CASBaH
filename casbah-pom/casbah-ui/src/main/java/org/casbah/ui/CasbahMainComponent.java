@@ -6,8 +6,11 @@ import org.casbah.provider.CAProvider;
 import org.casbah.provider.CAProviderException;
 
 import com.vaadin.Application;
+import com.vaadin.terminal.ClassResource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.CustomComponent;
+import com.vaadin.ui.Embedded;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.VerticalLayout;
 
@@ -31,7 +34,12 @@ public class CasbahMainComponent extends CustomComponent {
 	public void init() throws CasbahException {
 		VerticalLayout rootLayout = new VerticalLayout();
 		rootLayout.setSizeFull();
-
+		Embedded banner = new Embedded(null, new ClassResource("/images/casbah.png", parentApplication));
+		
+		rootLayout.addComponent(banner);
+		rootLayout.setComponentAlignment(banner, Alignment.MIDDLE_CENTER);
+		
+		
 		tabSheet = new TabSheet();
 		
 		configView = new ConfigComponent(parentApplication, provider, casbahConfiguration);
@@ -52,7 +60,14 @@ public class CasbahMainComponent extends CustomComponent {
 		rootLayout.addComponent(tabSheet);
 		rootLayout.setComponentAlignment(tabSheet, Alignment.TOP_CENTER);
 		
+		Label footer = new Label("Copyright 2010 - Marco Sandrini - CASBaH is released under the Affero GPL License v.3");
+		footer.setSizeUndefined();
+		rootLayout.addComponent(footer);
+		rootLayout.setComponentAlignment(footer, Alignment.TOP_CENTER);
+		
+		setSizeFull();
 		setCompositionRoot(rootLayout);
 	}
 
 }
+

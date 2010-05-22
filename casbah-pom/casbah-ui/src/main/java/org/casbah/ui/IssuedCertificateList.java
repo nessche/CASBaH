@@ -30,8 +30,7 @@ public class IssuedCertificateList extends CustomComponent
 	
 	public void init() throws CAProviderException {
 		
-		Panel panel = new Panel("Issued Certificates");
-		panel.setContent(new VerticalLayout());
+		VerticalLayout layout =  new VerticalLayout();
 		
 		Table table = new Table();
 		table.addContainerProperty("Serial Number", String.class, null);
@@ -44,11 +43,11 @@ public class IssuedCertificateList extends CustomComponent
 			table.addItem(new Object[] { cert.getSerial(), cert.getDn(), cert.getExpDate()}, cert.getSerial());
 		}
 		
-		panel.addComponent(table);
+		layout.addComponent(table);
 		table.setSizeFull();
-        panel.setSizeFull();
+        layout.setSizeFull();
         setSizeFull();
 		
-		setCompositionRoot(panel);
+		setCompositionRoot(layout);
 	}
 }

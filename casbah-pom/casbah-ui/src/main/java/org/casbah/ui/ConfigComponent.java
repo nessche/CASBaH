@@ -61,6 +61,7 @@ public class ConfigComponent extends CustomComponent {
 		configInfo.addComponent(keypass);
 		
 		configInfo.setSizeFull();
+		setSizeFull();
 		setCompositionRoot(configInfo);
 	}
 	
