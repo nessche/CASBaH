@@ -13,10 +13,14 @@ import org.xml.sax.InputSource;
 
 public class CasbahConfigurationHelper {
 
-	private static Mapping getMapping() {
+	private static Mapping getMapping() throws CasbahException {
 		Mapping mapping = new Mapping();
-		mapping.loadMapping(new InputSource(
-				CasbahConfigurationHelper.class.getResourceAsStream("/configuration-mapping.xml")));
+		InputSource inputSource = new InputSource(
+				CasbahConfigurationHelper.class.getResourceAsStream("/configuration-mapping.xml"));
+		if (inputSource == null) {
+			throw new CasbahException("Could not load castor mapping file", null);
+		}
+		mapping.loadMapping(inputSource);
 		return mapping;
 	}
 	

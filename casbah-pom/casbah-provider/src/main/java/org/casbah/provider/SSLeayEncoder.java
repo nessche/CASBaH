@@ -2,31 +2,16 @@ package org.casbah.provider;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringReader;
-import java.security.AlgorithmParameterGenerator;
-import java.security.AlgorithmParameters;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
+import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.security.interfaces.RSAPrivateCrtKey;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.RSAPrivateKeySpec;
 import java.util.Properties;
-import java.util.Random;
 
-import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESedeKeySpec;
@@ -34,7 +19,6 @@ import javax.crypto.spec.IvParameterSpec;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.casbah.common.PemEncoder;
 
@@ -47,6 +31,8 @@ public class SSLeayEncoder {
 	private static final String PROC_TYPE = "Proc-Type";
 	private static final String DEK_INFO = "DEK-Info";
 	private static final int SALT_LENGTH = 8;
+	private static final int BASE64_LINE_LENGTH = 64;
+	private static final byte[] BASE64_LINE_SEPARATOR = "\n".getBytes();
 	
 	public static RSAPrivateCrtKey decodeKey(String pemData, String keypass) throws CAProviderException {
 		
@@ -58,10 +44,8 @@ public class SSLeayEncoder {
 			if ((portions == null) || (portions.length != 3)) {
 				throw new CAProviderException("Could not extract metainfo from file",  null);
 			}
-			System.out.println("...." + portions[1]);
 			Properties props = new Properties();
 			props.load(new StringReader(portions[1]));
-			System.out.println(props.size());
 			String procType = props.getProperty(PROC_TYPE);
 			if ((procType == null) || (!procType.equals(SUPPORTED_PROC_TYPE))) {
 				throw new CAProviderException("Missing or invalid Proc-Type declaration", null);
@@ -91,23 +75,26 @@ public class SSLeayEncoder {
 		}	
 	}
 	
-	public static byte[] decryptKey(String data, byte[] salt, String keypass) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidKeySpecException, IOException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
-		System.out.println(Hex.encodeHexString(salt) + " ... " +salt.length);
+	public static byte[] decryptKey(String data, byte[] salt, String keypass) throws IOException, GeneralSecurityException {
 		byte[] encData = Base64.decodeBase64(data);
+		return performCipherOperation(encData, salt, keypass, Cipher.DECRYPT_MODE);
+	}
+	
+	private static byte[] performCipherOperation(byte[] data, byte[] salt, String keypass, int opMode) throws GeneralSecurityException, IOException {
 		Cipher cipher = Cipher.getInstance(JAVA_ENC_ALGORITHM);
 		SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance(JAVA_KEY_TYPE);
-		SecretKey key = secretKeyFactory.generateSecret(calculateKeyFromPassKey(keypass.getBytes(), salt));
+		SecretKey secretKey = secretKeyFactory.generateSecret(calculateKeyFromPassKey(keypass.getBytes(), salt));
 		IvParameterSpec iv = new IvParameterSpec(salt);
-		cipher.init(Cipher.DECRYPT_MODE, key, iv);
-		
-		return cipher.doFinal(encData);
+		cipher.init(opMode, secretKey, iv);
+		return cipher.doFinal(data);
 	}
 	
-	public static String encryptKey(byte[] data, byte[] salt, String keypass) {
-		return null;
+	public static String encryptKey(byte[] data, byte[] salt, String keypass) throws GeneralSecurityException, IOException {
+		byte[] encData = performCipherOperation(data, salt, keypass, Cipher.ENCRYPT_MODE);
+		return new Base64(BASE64_LINE_LENGTH, BASE64_LINE_SEPARATOR).encodeToString(encData);
 	}
 	
-	private static DESedeKeySpec calculateKeyFromPassKey(byte[] keypass, byte[] salt) throws NoSuchAlgorithmException, IOException, InvalidKeyException {
+	private static DESedeKeySpec calculateKeyFromPassKey(byte[] keypass, byte[] salt) throws  IOException, GeneralSecurityException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		MessageDigest md = MessageDigest.getInstance("MD5");
 		byte[] digest = null;
@@ -124,7 +111,7 @@ public class SSLeayEncoder {
 		return result;
 	}
 	
-	public String encodeKey(RSAPrivateCrtKey key, String keypass) {
+	public static String encodeKey(RSAPrivateCrtKey key, String keypass) throws GeneralSecurityException, IOException {
 		
 		PKCS1EncodedKey pkcs1Key = new PKCS1EncodedKey(key);
 		byte[] derData = pkcs1Key.getEncoded();

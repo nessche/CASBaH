@@ -3,7 +3,6 @@ package org.casbah.ui;
 import org.casbah.common.CasbahException;
 import org.casbah.configuration.CasbahConfiguration;
 import org.casbah.provider.CAProvider;
-import org.casbah.provider.CAProviderException;
 
 import com.vaadin.Application;
 import com.vaadin.terminal.ClassResource;

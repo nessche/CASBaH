@@ -1,8 +1,6 @@
 package org.casbah.configuration;
 
 import org.casbah.common.CasbahException;
-import org.casbah.provider.CAProvider;
-import org.casbah.provider.openssl.OpenSslCAProvider;
 
 public enum SupportedProvider {
 	

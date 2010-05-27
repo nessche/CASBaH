@@ -1,14 +1,13 @@
 package org.casbah.der;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertArrayEquals;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
-import java.util.List;
 
 import org.junit.Test;
 
@@ -106,13 +105,14 @@ public class DerInputStreamTest {
 		assertTrue(tag.isConstructed());
 		
 		Object value = obj.getValue();
-		assertTrue(value instanceof List<?>);
-		List<?> children = (List<?>) value;
-		assertEquals(2, children.size());
-		Object child1 = children.get(0);
-		assertTrue(child1 instanceof DerObject);
-		Object child2 = children.get(1);
-		assertTrue(child2 instanceof DerObject);
+		assertTrue(value instanceof DerObject[]);
+		DerObject[] children = (DerObject[]) value;
+		assertEquals(2, children.length);
+		DerObject child1 = children[0];
+		assertFalse(child1.getBoolean());
+		DerObject child2 = children[1];
+		assertTrue(child2.getBoolean());
+
 	}
 	
 	@Test
@@ -132,6 +132,6 @@ public class DerInputStreamTest {
 		
 		Object value = obj.getValue();
 		assertTrue(value instanceof BigInteger);
-		assertEquals(expected, (BigInteger) value);
+		assertEquals(expected, value);
 	}
 }

@@ -15,6 +15,8 @@ import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
 public class JNLPConsole extends JFrame {
+
+	private static final long serialVersionUID = 1L;
 	private final JTextArea textArea = new JTextArea();
 
 	public JNLPConsole() throws HeadlessException, IOException {

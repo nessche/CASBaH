@@ -1,6 +1,7 @@
 package org.casbah.ui;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
@@ -63,6 +64,8 @@ public class IssuedCertificateList extends CustomComponent
 		HorizontalLayout buttons = new HorizontalLayout();
 		buttons.addComponent(new Button("Create Key/Certificate Pair", new ClickListener() {
 			
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void buttonClick(ClickEvent event) {
 				try {
@@ -95,7 +98,7 @@ public class IssuedCertificateList extends CustomComponent
 		}		
 	}
 	
-	private void createKeyCertificatePair() throws CasbahException, IOException {
+	private void createKeyCertificatePair() throws CasbahException, IOException, GeneralSecurityException {
 		X500Principal principal = new X500Principal("C=FI, ST=Uusimaa, L=Helsinki, O=Harhaanjohtaja.com, CN=Certificate " + System.currentTimeMillis());
 		logger.info("Generating key/cert bundle");
 		KeyCertificateBundle bundle = provider.getKeyCertificateBundle(principal, "password");
@@ -106,7 +109,7 @@ public class IssuedCertificateList extends CustomComponent
 		DownloadResource dr = new DownloadResource(source, PKCS12_MIME_TYPE, "mykey" + PKCS12_EXTENSION, parentApplication);
 		parentApplication.getMainWindow().open(dr,"_new");*/
 		
-		ZipResource source = UiHelper.bundleKeyAndCertificateChain("password".toCharArray(), bundle.getPrivateKey(), bundle.getCertificate(), provider.getCACertificate());
+		ZipResource source = UiHelper.bundleKeyAndCertificateChain("password", bundle.getPrivateKey(), bundle.getCertificate(), provider.getCACertificate());
 		DownloadResource dr = new DownloadResource(source, ZIP_MIME_TYPE, "mykey" + ZIP_EXTENSION, parentApplication);
 		parentApplication.getMainWindow().open(dr,"_new");
 		logger.info("Refreshing table");

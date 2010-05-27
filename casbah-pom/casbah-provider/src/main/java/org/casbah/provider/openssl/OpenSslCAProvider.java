@@ -1,7 +1,6 @@
 package org.casbah.provider.openssl;
 
 import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -18,18 +17,15 @@ import java.security.cert.X509Certificate;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import javax.security.auth.x500.X500Principal;
 
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.FileUtils;
 import org.casbah.provider.CAProvider;
 import org.casbah.provider.CAProviderException;
-import org.casbah.provider.CertificateHelper;
 import org.casbah.provider.CertificateMetainfo;
 import org.casbah.provider.KeyCertificateBundle;
-import org.casbah.provider.KeyHelper;
+import org.casbah.provider.SSLeayEncoder;
 
 public class OpenSslCAProvider implements CAProvider{
 
@@ -282,8 +278,8 @@ public class OpenSslCAProvider implements CAProvider{
 			if (wrapper.executeCommand(input, output, error, args.toList()) != 0) {
 				throw new CAProviderException("Could not generate the private key", null);
 			}
-			OpenSslKeyHelper kh = new OpenSslKeyHelper(openSslExecutable, caRootDir);
-			return kh.readKeyFromSSLeayFile(keypass, outFile);
+			String pemData = FileUtils.readFileToString(outFile);
+			return SSLeayEncoder.decodeKey(pemData, keypass);
 		} catch (InterruptedException ie) {
 			throw new CAProviderException("Could not generate the private key", ie);
 		} catch (IOException ioe) {
@@ -402,31 +398,6 @@ public class OpenSslCAProvider implements CAProvider{
 		File certFile = new File(caRootDir, CERT_PATH + File.separator + nextSerial + CERT_SUFFIX);
 		X509Certificate cert = signCsr(csrFile, certFile);
 		return new KeyCertificateBundle(privateKey, cert);
-	}
-	
-	private byte[] bundle(String name, File keyFile, X509Certificate cert) throws CAProviderException {
-		try {
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			ZipOutputStream zos = new ZipOutputStream(baos);
-			
-			ZipEntry keyEntry = new ZipEntry(name + KEY_SUFFIX);
-			zos.putNextEntry(keyEntry);
-			IOUtils.copy(new FileInputStream(keyFile), zos);
-			
-			ZipEntry certEntry = new ZipEntry(name + EXPORTED_CERT_SUFFIX);
-			zos.putNextEntry(certEntry);
-			IOUtils.write(CertificateHelper.encodeCertificate(cert, true).getBytes(), zos);
-			
-			zos.close();
-			byte[] result = baos.toByteArray();
-			baos.close();
-			return result;
-		} catch (IOException ioe) {
-			throw new CAProviderException("Error creating the key/cert bundle", ioe);
-		}	
-		
-	}
-		
-		
+	}	
  
 }

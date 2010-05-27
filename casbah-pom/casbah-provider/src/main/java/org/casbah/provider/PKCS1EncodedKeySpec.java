@@ -13,6 +13,7 @@ import org.casbah.der.DerObject;
 public class PKCS1EncodedKeySpec extends EncodedKeySpec {
 
 	private static final String FORMAT = "PKCS#1";
+	private static final int VERSION = 0;
 	
 	@Override
 	public String getFormat() {
@@ -31,11 +32,14 @@ public class PKCS1EncodedKeySpec extends EncodedKeySpec {
 				throw new CAProviderException("Unexpected ASN1 object");
 			}
 			Object value = sequence.getValue();
-			System.out.println(value.getClass().getCanonicalName());
 			if (!(value instanceof DerObject[])) {
 				throw new CAProviderException("Unexpected payload in sequence object");
 			}
 			DerObject[] children = (DerObject[]) value;
+			BigInteger version = children[0].getInteger();
+			if (version.intValue() != VERSION) {
+				throw new CAProviderException("Unsupported version " + version);
+			}
 			BigInteger modulus = children[1].getInteger();
 			BigInteger publicExponent = children[2].getInteger();
 			BigInteger privateExponent = children[3].getInteger();

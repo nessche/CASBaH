@@ -185,6 +185,7 @@ public class MainCAView extends CustomComponent{
 				String csr = (String) csrData.getValue();
 				try {
 					X509Certificate result = provider.sign(csr);
+					showEncodedCertificate(result, result.getSerialNumber().toString(16));
 					
 				} catch (CAProviderException cpe) {
 					cpe.printStackTrace();

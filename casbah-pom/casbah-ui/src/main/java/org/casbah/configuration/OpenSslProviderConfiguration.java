@@ -1,7 +1,6 @@
 package org.casbah.configuration;
 
 import java.io.File;
-import java.util.logging.Logger;
 
 import org.casbah.common.CasbahException;
 import org.casbah.common.EqualsUtil;
@@ -12,7 +11,6 @@ import org.casbah.provider.openssl.OpenSslCAProvider;
 public class OpenSslProviderConfiguration implements ProviderConfiguration {
 
 	private static final String OPENSSL_EXECUTABLE = "openssl";
-	private static final Logger logger = Logger.getLogger(OpenSslProviderConfiguration.class.getCanonicalName());
 	
 	private String caroot;
 	private String keypass;
@@ -83,6 +81,7 @@ public class OpenSslProviderConfiguration implements ProviderConfiguration {
 			EqualsUtil.areEqual(this.keypass, otherConfig.getKeypass());
 	}
 	
+	@Override
 	public int hashCode() {
 		return new Hash().add(executablePath).add(caroot).add(keypass).hashCode();
 	}

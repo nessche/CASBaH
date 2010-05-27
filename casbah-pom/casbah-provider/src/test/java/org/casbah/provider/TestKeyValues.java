@@ -2,7 +2,7 @@ package org.casbah.provider;
 
 import java.math.BigInteger;
 
-public class TestKeyValues {
+public abstract class TestKeyValues {
 
 	public static final BigInteger MODULUS = new BigInteger(
 			"00b394b1f8f3d2e37ca36d51249e0a" + "b907f36d622fae11834e76d8d62a80"
