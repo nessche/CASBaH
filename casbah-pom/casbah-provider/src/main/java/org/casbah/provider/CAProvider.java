@@ -24,6 +24,7 @@ public interface CAProvider {
 	
 	X509CRL getLatestCrl(boolean generateCrl) throws CAProviderException;
 	
+	KeyCertificateBundle getKeyCertificateBundle(X500Principal principal, String keypass) throws CAProviderException;
 	
 	
 }

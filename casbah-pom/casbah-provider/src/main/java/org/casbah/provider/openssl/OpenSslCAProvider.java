@@ -1,6 +1,7 @@
 package org.casbah.provider.openssl;
 
 import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -8,7 +9,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.cert.CRL;
+import java.security.PrivateKey;
 import java.security.cert.CRLException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -17,24 +18,33 @@ import java.security.cert.X509Certificate;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.security.auth.x500.X500Principal;
 
+import org.apache.commons.io.IOUtils;
 import org.casbah.provider.CAProvider;
 import org.casbah.provider.CAProviderException;
+import org.casbah.provider.CertificateHelper;
 import org.casbah.provider.CertificateMetainfo;
+import org.casbah.provider.KeyCertificateBundle;
+import org.casbah.provider.KeyHelper;
 
 public class OpenSslCAProvider implements CAProvider{
 
+	private static final String KEY_SUFFIX = ".key";
+	private static final String REQ_SUFFIX = ".csr";
+	private static final String REQ_PATH = "requests";
 	private static final Logger logger = Logger.getLogger(OpenSslCAProvider.class.getCanonicalName());
 	private static final String KEY_FILE = "keys" + File.separatorChar + "ca.key";
 	private static final String CACERT_FILE = "certs" + File.separatorChar + "ca.cer";
 	private static final String SERIAL_FILE = "serial.txt";
 	private static final String CERT_SUFFIX = ".pem";
+	private static final String EXPORTED_CERT_SUFFIX = ".crt";
 	private static final String DATABASE_FILE = "database.txt";
 	private static final String CERT_PATH = "certs";
 	private static final String KEY_PATH = "keys";
-	private static final String REQ_PATH = "requests";
 	private static final String CA_PUBLIC_CERT = "ca.cer";
 	private static final String CONFIG_FILE = "openssl.cnf";
 	private static final String CRL_FILE = "crl.der";
@@ -97,32 +107,38 @@ public class OpenSslCAProvider implements CAProvider{
 		} 
 		try {
 			String nextSerial = new OpenSslSerialAdapter(new File(caRootDir, SERIAL_FILE)).getNextSerialNumber();
-			
+			File certFile = new File(caRootDir, CERT_PATH + File.separator + nextSerial + CERT_SUFFIX);
+			return signCsr(tempFile, certFile);
+		}  finally {
+			if (tempFile.exists()) {
+				tempFile.delete();
+			}
+		}
+	}
+	
+	private X509Certificate signCsr(File csrFile, File certFile) throws CAProviderException {
+		try {
 			OpenSslWrapper wrapper = new OpenSslWrapper(openSslExecutable, caRootDir);
 			StringBuffer output = new StringBuffer();
 			StringBuffer error = new StringBuffer();
-			StringBuffer input = new StringBuffer(keypass + "\n");
+			String input = keypass + "\n";
 			OpenSslWrapperArgumentList args = new OpenSslWrapperArgumentList();
 			args.setCA().setNoText().setBatch().addConfig(new File(caRootDir, CONFIG_FILE))
-				.addInFile(tempFile).addOutdir(new File(caRootDir, CERT_PATH)).addStdinPassin().setVerbose();
+				.addInFile(csrFile).addOutdir(new File(caRootDir, CERT_PATH)).addStdinPassin().setVerbose();
+			System.out.println(args.toString());
 			if (wrapper.executeCommand(input, output, error, args.toList()) == 0) {
-				return getCertificate(new File(new File(caRootDir, CERT_PATH), nextSerial + CERT_SUFFIX));
+				return getCertificate(certFile);
 			} else {
 				throw new CAProviderException("Error while signing the certificate", new OpenSslNativeException(error.toString()));
 			}
-
 		} catch (InterruptedException ie) {
-			throw new CAProviderException("Error while signing the certificate", ie);
-		} catch (CertificateException ce) {
+			throw new CAProviderException("Could not sign CSR", ie);
+		}  catch (CertificateException ce) {
 			throw new CAProviderException("Cannot read created certificate", ce);
 		} catch (FileNotFoundException e) {
 			throw new CAProviderException("Error while reading created certificate", e);
 		} catch (IOException e) {
 			throw new CAProviderException("Error while reading created certificate", e);
-		} finally {
-			if (tempFile.exists()) {
-				tempFile.delete();
-			}
 		}
 	}
 
@@ -184,7 +200,7 @@ public class OpenSslCAProvider implements CAProvider{
 			OpenSslWrapperArgumentList args = new OpenSslWrapperArgumentList().setVersion();
 			StringBuffer output = new StringBuffer();
 			StringBuffer error = new StringBuffer();
-			int result = wrapper.executeCommand(null, output, error, args.toList());
+			int result = wrapper.executeCommand(output, error, args.toList());
 			if (result != 0) {
 				throw new CAProviderException("Could not execute " + openSslExecutable, null);
 			}
@@ -202,7 +218,8 @@ public class OpenSslCAProvider implements CAProvider{
 	public boolean setUpCA(X500Principal principal, String keypass) throws CAProviderException {
 		generateDirectoryStructure();
 		copyDefaultCnfFile();
-		generatePrivateKey(keypass);
+		generatePrivateKey(keypass, new File(caRootDir, KEY_FILE));
+		this.keypass = keypass;
 		generateSelfSignedCert(principal, keypass);
 		OpenSslDatabaseAdapter dbAdapter = new OpenSslDatabaseAdapter(new File(caRootDir, DATABASE_FILE));
 		dbAdapter.createEmptyDatabase();
@@ -252,21 +269,21 @@ public class OpenSslCAProvider implements CAProvider{
 		}
 	}
 	
-	private void generatePrivateKey(String keypass) throws CAProviderException {
+	private PrivateKey generatePrivateKey(String keypass, File outFile) throws CAProviderException {
 		try {
 			logger.info("Key generation started");
 			OpenSslWrapper wrapper = new OpenSslWrapper(openSslExecutable, caRootDir);
 			OpenSslWrapperArgumentList args = new OpenSslWrapperArgumentList().addGenrsa().
-				addStdinPassout().setDes3().addOutFile(new File(caRootDir, KEY_FILE)).
+				addStdinPassout().setDes3().addOutFile(outFile).
 				addKeyLength(2048);
-			StringBuffer input = new StringBuffer(keypass);
+			String input = keypass + '\n';
 			StringBuffer output = new StringBuffer();
 			StringBuffer error = new StringBuffer();
-			input.append("\n");
 			if (wrapper.executeCommand(input, output, error, args.toList()) != 0) {
 				throw new CAProviderException("Could not generate the private key", null);
 			}
-			this.keypass = keypass;
+			OpenSslKeyHelper kh = new OpenSslKeyHelper(openSslExecutable, caRootDir);
+			return kh.readKeyFromSSLeayFile(keypass, outFile);
 		} catch (InterruptedException ie) {
 			throw new CAProviderException("Could not generate the private key", ie);
 		} catch (IOException ioe) {
@@ -281,10 +298,9 @@ public class OpenSslCAProvider implements CAProvider{
 			OpenSslWrapperArgumentList args = new OpenSslWrapperArgumentList().setReq().
 				setNew().setX509().setBatch().addDays(365).addSubject(subject).addStdinPassin().
 				addKey(new File(caRootDir,KEY_FILE)).addOutFile(new File(caRootDir, CACERT_FILE));
-			StringBuffer input = new StringBuffer(keypass + "\n");
+			String input = keypass + "\n";
 			StringBuffer output = new StringBuffer();
 			StringBuffer error = new StringBuffer();
-			input.append("\n");
 			if (wrapper.executeCommand(input, output, error, args.toList()) != 0) {
 				throw new CAProviderException("Could not generated self-signed cert", null);
 			}
@@ -335,7 +351,7 @@ public class OpenSslCAProvider implements CAProvider{
 				setCA().addConfig(new File(caRootDir, CONFIG_FILE)).setGencrl().
 				addStdinPassin().
 				addCrlDays(CRL_VALIDITY_DAYS).addOutFile(new File(caRootDir,CRL_FILE));
-			StringBuffer input = new StringBuffer(keypass + "\n");
+			String input = keypass + "\n";
 			StringBuffer output = new StringBuffer();
 			StringBuffer error = new StringBuffer();			
 			if (wrapper.executeCommand(input, output, error, args.toList()) != 0) {
@@ -351,6 +367,64 @@ public class OpenSslCAProvider implements CAProvider{
 		} catch (Exception e) {
 			throw new CAProviderException("New crl has been generated but could not be read", e);
 		}
+	}
+	
+	private void generateCsr(X500Principal principal, File keyFile, String keypass, File csrFile) throws CAProviderException {
+		try {
+			String subject = OpenSslDnConverter.convertToOpenSsl(principal.getName());	
+			OpenSslWrapper wrapper = new OpenSslWrapper(openSslExecutable, caRootDir);
+			OpenSslWrapperArgumentList args = new OpenSslWrapperArgumentList().setReq().
+				setNew().setBatch().addDays(365).addSubject(subject).addStdinPassin().
+				addKey(keyFile).addOutFile(csrFile);
+			String input = keypass + "\n";
+			StringBuffer output = new StringBuffer();
+			StringBuffer error = new StringBuffer();
+			if (wrapper.executeCommand(input, output, error, args.toList()) != 0) {
+				throw new CAProviderException("Could not generated self-signed cert", null);
+			}
+		} catch (InterruptedException ie) {
+			throw new CAProviderException("Could not generate CSR file", ie);
+		} catch (IOException e) {
+			throw new CAProviderException("Could not generate CSR file", e);
+		}
+		
+	}
+
+	@Override
+	public KeyCertificateBundle getKeyCertificateBundle(X500Principal principal,
+			String keypass) throws CAProviderException {
+		OpenSslSerialAdapter serialAdapter = new OpenSslSerialAdapter(new File(caRootDir, SERIAL_FILE));
+		String nextSerial = serialAdapter.getNextSerialNumber();
+		File keyFile = new File(caRootDir,KEY_PATH + File.separator + nextSerial + KEY_SUFFIX);
+		PrivateKey privateKey = generatePrivateKey(keypass, keyFile);
+		File csrFile = new File(caRootDir, REQ_PATH + File.separator + nextSerial + REQ_SUFFIX);
+		generateCsr(principal, keyFile, keypass, csrFile);
+		File certFile = new File(caRootDir, CERT_PATH + File.separator + nextSerial + CERT_SUFFIX);
+		X509Certificate cert = signCsr(csrFile, certFile);
+		return new KeyCertificateBundle(privateKey, cert);
+	}
+	
+	private byte[] bundle(String name, File keyFile, X509Certificate cert) throws CAProviderException {
+		try {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			ZipOutputStream zos = new ZipOutputStream(baos);
+			
+			ZipEntry keyEntry = new ZipEntry(name + KEY_SUFFIX);
+			zos.putNextEntry(keyEntry);
+			IOUtils.copy(new FileInputStream(keyFile), zos);
+			
+			ZipEntry certEntry = new ZipEntry(name + EXPORTED_CERT_SUFFIX);
+			zos.putNextEntry(certEntry);
+			IOUtils.write(CertificateHelper.encodeCertificate(cert, true).getBytes(), zos);
+			
+			zos.close();
+			byte[] result = baos.toByteArray();
+			baos.close();
+			return result;
+		} catch (IOException ioe) {
+			throw new CAProviderException("Error creating the key/cert bundle", ioe);
+		}	
+		
 	}
 		
 		

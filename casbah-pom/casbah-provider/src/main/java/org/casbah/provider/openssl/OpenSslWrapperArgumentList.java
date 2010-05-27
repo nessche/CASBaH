@@ -6,6 +6,12 @@ import java.util.List;
 
 public class OpenSslWrapperArgumentList {
 
+	private static final String OUTFORM_SWITCH = "-outform";
+	private static final String DER = "DER";
+	private static final String TOPK8_SWITCH = "-topk8";
+	private static final String PKCS8_SWITCH = "pkcs8";
+	private static final String CHECK_SWITCH = "-check";
+	private static final String RSA_SWITCH = "rsa";
 	private static final String CRLDAYS_SWITCH = "-crldays";
 	private static final String SUBJECT_SWITCH = "-subj";
 	private static final String PASSIN_SWITCH = "-passin";
@@ -28,6 +34,15 @@ public class OpenSslWrapperArgumentList {
 	private static final String BATCH_SWITCH = "-batch";
 	private static final String VERSION_SWITCH = "version";
 	private List<String> args = new ArrayList<String>();
+	
+	public String toString() {
+		StringBuffer buffer = new StringBuffer();
+		for (String arg : args) {
+			buffer.append(arg);
+			buffer.append(' ');
+		}
+		return buffer.toString();
+	}
 	
 	public OpenSslWrapperArgumentList setBatch() {
 		return addSwitchParameter(BATCH_SWITCH);
@@ -143,6 +158,30 @@ public class OpenSslWrapperArgumentList {
 	
 	public OpenSslWrapperArgumentList addCrlDays(int noOfDays) {
 		return addStringParameter(CRLDAYS_SWITCH, Integer.toString(noOfDays));
+	}
+
+	public OpenSslWrapperArgumentList setRsa() {
+		return addSwitchParameter(RSA_SWITCH);
+	}
+
+	public OpenSslWrapperArgumentList setCheck() {
+		return addSwitchParameter(CHECK_SWITCH);
+	}
+	
+	public OpenSslWrapperArgumentList setPkcs8() {
+		return addSwitchParameter(PKCS8_SWITCH);
+	}
+
+	public OpenSslWrapperArgumentList setTopk8() {
+		return addSwitchParameter(TOPK8_SWITCH);
+	}
+
+	public OpenSslWrapperArgumentList addOutformDer() {
+		return addOutform(DER);
+	}
+
+	public OpenSslWrapperArgumentList addOutform(String form) {
+		return addStringParameter(OUTFORM_SWITCH, form);
 	}
 	
 }

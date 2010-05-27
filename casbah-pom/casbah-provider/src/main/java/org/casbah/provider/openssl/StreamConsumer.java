@@ -1,33 +1,32 @@
 package org.casbah.provider.openssl;
 
-import java.io.BufferedReader;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
 
 public class StreamConsumer extends Thread {
 	
-	final BufferedReader reader;
-	final StringBuffer buffer;
+	final BufferedInputStream input;
+	final OutputStream output;
 	private final CyclicBarrier barrier;
 	private final long timeout;
 	
-	public StreamConsumer(StringBuffer buffer, InputStream stream, CyclicBarrier barrier, long timeout) {
+	public StreamConsumer(OutputStream output, InputStream input, CyclicBarrier barrier, long timeout) {
 		this.barrier = barrier;
-		this.buffer = buffer;
+		this.output = output;
 		this.timeout = timeout;
-		reader = new BufferedReader(new InputStreamReader(stream));
+		this.input = new BufferedInputStream(input);
 	}
 	
 	@Override
 	public void run() {
 		try {
-			String line = null;
-			while ((line = reader.readLine()) != null) {
-				buffer.append(line);
-				buffer.append('\n');
+			int i = 0;
+			while ((i = input.read()) != -1) {
+				output.write(i);
 			}
 		} catch (IOException ioe) {
 			ioe.printStackTrace();

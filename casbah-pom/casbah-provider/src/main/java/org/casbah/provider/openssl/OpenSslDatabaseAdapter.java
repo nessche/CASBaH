@@ -1,14 +1,9 @@
 package org.casbah.provider.openssl;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -38,8 +33,9 @@ public class OpenSslDatabaseAdapter {
 	}
 	
 	public synchronized void parse() throws CAProviderException {
+		BufferedReader reader = null;
 		try {
-			BufferedReader reader = new BufferedReader(new FileReader(databaseFile));
+			reader = new BufferedReader(new FileReader(databaseFile));
 			String line = null;
 			while ((line = reader.readLine()) != null) {
 				if (line.length() > 0) {
@@ -48,11 +44,20 @@ public class OpenSslDatabaseAdapter {
 				}
 			}
 			parsed = true;
+			reader.close();
 		} catch (FileNotFoundException fnfe) {
 			throw new CAProviderException("Could not find database file", fnfe);
 		} catch (IOException ioe) {
 			throw new CAProviderException("Could not read database file", ioe);
-		}
+		} finally {
+			try {
+				if (reader != null) {
+					reader.close();
+				}
+			} catch (IOException ioe) {
+				ioe.printStackTrace();
+			}
+ 		}
 	}
 	
 	private CertificateMetainfo parseLine(String line) throws CAProviderException {

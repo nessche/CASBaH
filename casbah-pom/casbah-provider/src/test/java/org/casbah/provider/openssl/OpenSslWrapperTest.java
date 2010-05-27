@@ -26,7 +26,7 @@ public class OpenSslWrapperTest {
 	public void testExecute() throws IOException, InterruptedException {
 		OpenSslWrapper wrapper = new OpenSslWrapper("openssl", new File(targetDir + "/caroot"));
 
-		int result = wrapper.executeCommand(null, output, error, Arrays.asList("req", "-noout", "-text", "-in", targetDir + "/client/requests/01.csr"));
+		int result = wrapper.executeCommand(output, error, Arrays.asList("req", "-noout", "-text", "-in", targetDir + "/client/requests/01.csr"));
 		System.out.println(error.toString());
 		System.out.println(output.toString());
 		
@@ -45,7 +45,7 @@ public class OpenSslWrapperTest {
 		}
 		OpenSslWrapper wrapper = new OpenSslWrapper("openssl", new File(targetDir + "/caroot"));
 
-		StringBuffer input = new StringBuffer("casbah\n");
+		String input = new String("casbah\n");
 		int result = wrapper.executeCommand(input, output, error, Arrays.asList("genrsa", "-passout", "stdin", "-des3", "-out",
 				outputFile.getAbsolutePath(), "2048"));
 		System.out.println("ERROR: " + error.toString());

@@ -1,20 +1,9 @@
 package org.casbah.ui;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-
-import com.vaadin.terminal.StreamResource.StreamSource;
-
-public class StringResource implements StreamSource {
-
-	final ByteArrayInputStream inputStream;
+public class StringResource extends ByteArrayResource {
 	
 	public StringResource(String source) {
-		inputStream = new ByteArrayInputStream(source.getBytes());
+		super(source.getBytes());
 	}
 	
-	public InputStream getStream() {
-		return inputStream;
-	}
-
 }

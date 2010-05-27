@@ -4,9 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.cert.Certificate;
@@ -18,6 +16,7 @@ import javax.security.auth.x500.X500Principal;
 
 import org.apache.commons.io.FileUtils;
 import org.casbah.provider.CAProviderException;
+import org.casbah.provider.KeyCertificateBundle;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -79,7 +78,7 @@ public class OpenSslCAProviderTest {
 		
 		rollbackPreviousTests();
 		
-		String csr = fileIntoString(new File(targetDir,"/client/requests/03.csr"));
+		String csr = FileUtils.readFileToString(new File(targetDir,"/client/requests/03.csr"));
 		OpenSslCAProvider provider = new OpenSslCAProvider(OPENSSL, new File(targetDir, CAROOT), PASSWORD);
 		X509Certificate cert = provider.sign(csr);
 		assertNotNull(cert);
@@ -117,14 +116,18 @@ public class OpenSslCAProviderTest {
 		assertNotNull(crl);
 	}
 	
-	private String fileIntoString(File file) throws IOException {
-		BufferedReader reader = new BufferedReader(new FileReader(file));
-		String line = null;
-		StringBuffer buffer = new StringBuffer();
-		while ((line = reader.readLine()) != null) {
-			buffer.append(line + '\n');
-		}
-		return buffer.toString();
+	@Test
+	public void testGetBundle() throws CAProviderException, IOException, InterruptedException {
+		rollbackPreviousTests();
+		X500Principal principal = new X500Principal("C=FI, ST=Uusimaa, L=Helsinki, O=Harhaanjohtaja.com, CN=Certificate " + System.currentTimeMillis());
+		String keypass = "password";
+		OpenSslCAProvider provider =  new OpenSslCAProvider(OPENSSL, new File(targetDir, CAROOT), PASSWORD);
+		KeyCertificateBundle bundle = provider.getKeyCertificateBundle(principal, keypass);
+		assertNotNull(bundle);
+		assertNotNull(bundle.getPrivateKey());
+		assertNotNull(bundle.getCertificate());
+		
+		
 	}
 	
 	

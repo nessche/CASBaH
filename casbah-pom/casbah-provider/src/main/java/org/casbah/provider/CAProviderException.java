@@ -10,4 +10,8 @@ public class CAProviderException extends CasbahException {
 		super(message, cause);
 	}
 	
+	public CAProviderException(String message) {
+		super(message, null);
+	}
+	
 }
