@@ -15,7 +15,9 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.security.auth.x500.X500Principal;
@@ -26,6 +28,8 @@ import org.casbah.provider.CAProviderException;
 import org.casbah.provider.CertificateMetainfo;
 import org.casbah.provider.KeyCertificateBundle;
 import org.casbah.provider.SSLeayEncoder;
+import org.casbah.provider.Principal.MatchingRule;
+import org.casbah.provider.Principal.PrincipalField;
 
 public class OpenSslCAProvider implements CAProvider{
 
@@ -398,6 +402,19 @@ public class OpenSslCAProvider implements CAProvider{
 		File certFile = new File(caRootDir, CERT_PATH + File.separator + nextSerial + CERT_SUFFIX);
 		X509Certificate cert = signCsr(csrFile, certFile);
 		return new KeyCertificateBundle(privateKey, cert);
+	}
+
+	@Override
+	public Map<PrincipalField, MatchingRule> getRuleMap() {
+		// TODO read this from configuration
+		Map<PrincipalField, MatchingRule> result = new HashMap<PrincipalField, MatchingRule>();
+		result.put(PrincipalField.C, MatchingRule.MATCH);
+		result.put(PrincipalField.ST, MatchingRule.MATCH);
+		result.put(PrincipalField.L, MatchingRule.MATCH);
+		result.put(PrincipalField.O, MatchingRule.MATCH);
+		result.put(PrincipalField.OU, MatchingRule.OPTIONAL);
+		result.put(PrincipalField.CN, MatchingRule.PROVIDED);
+		return result;
 	}	
  
 }

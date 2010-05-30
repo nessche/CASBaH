@@ -2,9 +2,9 @@ package org.casbah.provider.openssl;
 
 import java.util.logging.Logger;
 
-public class OpenSslDnConverter {
+import org.casbah.provider.DNSplitter;
 
-	private static final String CANONICAL_SPLITTER = "(?<!\\\\),";
+public class OpenSslDnConverter {
 
 	private static final Logger logger = Logger.getLogger(OpenSslDnConverter.class.getCanonicalName());
 	
@@ -16,7 +16,7 @@ public class OpenSslDnConverter {
 		if (canonicalDn == null) {
 			return null;
 		}
-		String[] fields = canonicalDn.split(CANONICAL_SPLITTER);
+		String[] fields = DNSplitter.splitCanonicalDN(canonicalDn);
 		logger.info("Detected " + fields.length + " fields");
 		StringBuffer result = new StringBuffer();	
 		for (String field : fields) {

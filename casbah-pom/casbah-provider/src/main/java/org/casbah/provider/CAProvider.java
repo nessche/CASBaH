@@ -3,6 +3,7 @@ package org.casbah.provider;
 import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
 import java.util.List;
+import java.util.Map;
 
 import javax.security.auth.x500.X500Principal;
 
@@ -25,6 +26,7 @@ public interface CAProvider {
 	X509CRL getLatestCrl(boolean generateCrl) throws CAProviderException;
 	
 	KeyCertificateBundle getKeyCertificateBundle(X500Principal principal, String keypass) throws CAProviderException;
-	
+
+	Map<Principal.PrincipalField, Principal.MatchingRule> getRuleMap();
 	
 }

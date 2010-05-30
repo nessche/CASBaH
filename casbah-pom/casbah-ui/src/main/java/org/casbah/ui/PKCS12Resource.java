@@ -1,38 +1,18 @@
 package org.casbah.ui;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.security.Key;
-import java.security.KeyStore;
 import java.security.cert.Certificate;
 
 import org.casbah.common.CasbahException;
 
-import com.vaadin.terminal.StreamResource.StreamSource;
+public class PKCS12Resource extends KeyStoreResource {
 
-public class PKCS12Resource implements StreamSource {
+	private static final String PKCS12_TYPE = "pkcs12";
 
-	private InputStream inputStream;
 	
 	public PKCS12Resource(char[] keypass, Key privateKey, Certificate...certificateChain)  throws CasbahException {
-		try {
-			KeyStore ks = KeyStore.getInstance("pkcs12");
-			ks.load(null, null);
-			ks.setKeyEntry("mykey", privateKey, keypass, certificateChain);
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			ks.store(baos, keypass);
-			inputStream = new ByteArrayInputStream(baos.toByteArray());
-			baos.close();			
-		} catch (Exception e) {
-			throw new CasbahException("Could not create PKCS12Resource", e);
-		}
+		super (PKCS12_TYPE, keypass, privateKey, certificateChain);
 	}
-	
-	
-	@Override
-	public InputStream getStream() {
-		return inputStream;
-	}
+
 
 }
