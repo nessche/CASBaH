@@ -111,22 +111,23 @@ public class IssuedCertificateList extends CustomComponent
 	private void createKeyCertificatePair(Principal principal, String keypass, BundleType type) throws CasbahException, IOException, GeneralSecurityException {
 
 		logger.info("Generating key/cert bundle");
-		KeyCertificateBundle bundle = provider.getKeyCertificateBundle(principal.toX500Principal(), "password");
+		KeyCertificateBundle bundle = provider.getKeyCertificateBundle(principal.toX500Principal(), keypass);
 		DownloadResource dr = null;
 		switch (type) {
 		case PKCS12:
 			logger.info("Create PKCS12 keystore");
-			PKCS12Resource pkcs12Source = new PKCS12Resource("password".toCharArray(), bundle.getPrivateKey(), bundle.getCertificate(), provider.getCACertificate());
+			PKCS12Resource pkcs12Source = new PKCS12Resource(keypass.toCharArray(), bundle.getPrivateKey(), bundle.getCertificate(), provider.getCACertificate());
 			logger.info("Sending PKCS12 to client");
 			dr = new DownloadResource(pkcs12Source, PKCS12_MIME_TYPE, "mykey" + PKCS12_EXTENSION, parentApplication);
 			break;
 		case OPENSSL:
-			ZipResource zipSource = UiHelper.bundleKeyAndCertificateChain("password", bundle.getPrivateKey(), bundle.getCertificate(), provider.getCACertificate());
+			ZipResource zipSource = UiHelper.bundleKeyAndCertificateChain(keypass, bundle.getPrivateKey(), bundle.getCertificate(), provider.getCACertificate());
 			dr = new DownloadResource(zipSource, ZIP_MIME_TYPE, "mykey" + ZIP_EXTENSION, parentApplication);
 			break;
 		case JKS:
-			ZipResource jksSource = UiHelper.bundleKeyAndCertificateChain("password", bundle.getPrivateKey(), bundle.getCertificate(), provider.getCACertificate());
-			dr = new DownloadResource(jksSource, JKS_MIME_TYPE, "mykey" + JKS_EXTENSION, parentApplication);			break;
+			JavaKeystoreResource jksSource = new JavaKeystoreResource(keypass.toCharArray(), bundle.getPrivateKey(), bundle.getCertificate(), provider.getCACertificate());
+			dr = new DownloadResource(jksSource, JKS_MIME_TYPE, "mykey" + JKS_EXTENSION, parentApplication);
+			break;
 		}
 	
 		parentApplication.getMainWindow().open(dr,"_new");	
@@ -138,8 +139,8 @@ public class IssuedCertificateList extends CustomComponent
 		final Window principalWindow = new Window("Specify Certificate Details");
 		principalWindow.setPositionX(200);
 		principalWindow.setPositionY(100);
-		principalWindow.setWidth("400px");
-		principalWindow.setHeight("300px");
+		principalWindow.setWidth("600px");
+		principalWindow.setHeight("500px");
 		principalWindow.addListener(new Window.CloseListener() {
 			
 			private static final long serialVersionUID = 1L;
@@ -169,8 +170,8 @@ public class IssuedCertificateList extends CustomComponent
 		final OptionGroup type = new OptionGroup("Bundle Type");
 		type.addItem(BundleType.OPENSSL);
 		type.addItem(BundleType.PKCS12);
-//		type.addItem(BundleType.JKS);
-		type.setValue(BundleType.OPENSSL.toString());
+		type.addItem(BundleType.JKS);
+		type.setValue(BundleType.OPENSSL);
 		vl.addComponent(type);
 		
 		HorizontalLayout buttonsLayout = new HorizontalLayout();
@@ -183,7 +184,7 @@ public class IssuedCertificateList extends CustomComponent
 				if (pass1.getValue().equals(pass2.getValue())) {
 					try {
 						createKeyCertificatePair(pc.toPrincipal(), (String) pass1.getValue(),
-								BundleType.valueOf((String) type.getValue()));
+								(BundleType) type.getValue());
 						parentApplication.getMainWindow().removeWindow(principalWindow);
 					} catch (Exception e) {
 						logger.severe(e.getMessage());

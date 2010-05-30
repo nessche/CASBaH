@@ -12,20 +12,21 @@ import org.casbah.common.CasbahException;
 import com.vaadin.terminal.StreamResource.StreamSource;
 
 public class KeyStoreResource implements StreamSource {
-
-	private InputStream inputStream;
+	
+	protected InputStream inputStream;
 	
 	public KeyStoreResource(String keystoreType, char[] keypass, Key privateKey, Certificate...certificateChain)  throws CasbahException {
 		try {
 			KeyStore ks = KeyStore.getInstance(keystoreType);
-			ks.load(null, null);
+			ks.load(null, keypass);
 			ks.setKeyEntry("mykey", privateKey, keypass, certificateChain);
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			ks.store(baos, keypass);
-			inputStream = new ByteArrayInputStream(baos.toByteArray());
+			byte[] data = baos.toByteArray();
+			inputStream = new ByteArrayInputStream(data);
 			baos.close();			
 		} catch (Exception e) {
-			throw new CasbahException("Could not create PKCS12Resource", e);
+			throw new CasbahException("Could not create KeyStoreResource", e);
 		}
 	}
 	

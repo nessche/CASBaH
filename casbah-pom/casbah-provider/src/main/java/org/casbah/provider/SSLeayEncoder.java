@@ -124,7 +124,6 @@ public class SSLeayEncoder {
 		buffer.append(PROC_TYPE + ": " + SUPPORTED_PROC_TYPE +"\n");
 		buffer.append(DEK_INFO + ": " + SSLEAY_ENC_ALGORITHM + "," + Hex.encodeHexString(salt)+"\n\n");
 		buffer.append(pemData);
-		buffer.append("\n");
 		buffer.append("-----END RSA PRIVATE KEY-----\n");
 		return buffer.toString();		
 	}

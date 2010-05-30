@@ -40,11 +40,12 @@ public class ConfigComponent extends CustomComponent {
 		TextField providerVersion = new TextField("Provider Version",
 				provider.getProviderVersion());
 		providerVersion.setReadOnly(true);
+		providerVersion.setWidth("400px");
 		configInfo.addComponent(providerVersion);
 		
 		OpenSslProviderConfiguration openSslConfig = (OpenSslProviderConfiguration) configuration.getProviderConfiguration();
 		
-		TextField pathToExecutable = new TextField("Path to OpenSSL executable (empty if executable is in system path",
+		TextField pathToExecutable = new TextField("Path to OpenSSL executable (empty if executable is in system path)",
 				openSslConfig.getExecutablePath());
 		pathToExecutable.setReadOnly(true);
 		configInfo.addComponent(pathToExecutable);

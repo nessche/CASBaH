@@ -54,12 +54,14 @@ public class CasbahMainComponent extends CustomComponent {
 		tabSheet.addTab(certView, "Issued Certificates", null);
 		
 		tabSheet.setWidth("1024px");
-		tabSheet.setHeight("760px");
 		
 		rootLayout.addComponent(tabSheet);
 		rootLayout.setComponentAlignment(tabSheet, Alignment.TOP_CENTER);
 		
-		Label footer = new Label("Copyright 2010 - Marco Sandrini - CASBaH is released under the Affero GPL License v.3");
+		Label footer = new Label("Copyright 2010 - Marco Sandrini - CASBaH is released under the" +
+				"<a href=\"http://www.gnu.org/licenses/agpl-3.0-standalone.html\"> Affero GPL License v.3</a>" +
+				" - Source Code is available through <a href=\"http://github.com/nessche/CASBaH/archives/master\">Github</a>",
+				Label.CONTENT_XHTML);
 		footer.setSizeUndefined();
 		rootLayout.addComponent(footer);
 		rootLayout.setComponentAlignment(footer, Alignment.TOP_CENTER);

@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2010 - Marco Sandrini
+ * 
+ * See file license.txt for licensing details
+ */
+
 package org.casbah.common;
 
 public final class EqualsUtil {

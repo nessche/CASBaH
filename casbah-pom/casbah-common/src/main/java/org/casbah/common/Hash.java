@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2010 - Marco Sandrini
+ * 
+ * See file license.txt for licensing details
+ */
+
 package org.casbah.common;
 
 public class Hash {
@@ -39,10 +45,12 @@ public class Hash {
 		return this;
 	}
 	
+	@Override
 	public int hashCode() {
 		return hash;
 	}
 	
+	@Override
 	public boolean equals(Object other) {
 		if (other instanceof Hash) {
 			return (this.hash == ((Hash) other).hash);
